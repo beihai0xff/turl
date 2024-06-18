@@ -33,6 +33,7 @@ gen/swagger:
 	swag init --parseDependency --parseDepth 1 -g app/turl/server/http_controller.go -o docs/swagger
 
 test: bootstrap gen/mock
+	docker compose -f ./test/docker-compose.yaml up -d
 	go test -gcflags="all=-l" -race -coverprofile=coverage.out -v ./...
 
 

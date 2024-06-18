@@ -16,6 +16,7 @@ func getWriters(c *configs.LogConfig) io.Writer {
 		if writer == configs.OutputConsole {
 			writers = append(writers, getConsoleWriter())
 		}
+
 		if writer == configs.OutputFile {
 			writer, _ := getFileWriter(&c.FileConfig)
 			// TODO: add cleanFunc to cleanFuncs
