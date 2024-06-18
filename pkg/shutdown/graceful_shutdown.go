@@ -20,13 +20,13 @@ func HTTPServerShutdown(httpServer *http.Server) OptionFunc {
 					slog.String("Error", err.Error()),
 				),
 			)
+
 			return err
 		}
 
-		slog.Info("HTTP server  stopped", slog.Group("Server Shutdown",
+		slog.Info("HTTP server stopped", slog.Group("Server Shutdown",
 			slog.String("HTTP Server Address", httpServer.Addr),
-		),
-		)
+		))
 
 		return nil
 	}

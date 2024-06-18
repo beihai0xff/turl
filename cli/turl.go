@@ -12,6 +12,11 @@ import (
 	"github.com/beiai0xff/turl/api"
 )
 
+const (
+	exitCodeOK    = 0
+	exitCodeError = 1
+)
+
 var (
 	gitHash   string
 	buildTime string
@@ -29,7 +34,7 @@ func New() *cli.App {
 		Version:              version,
 		ExitErrHandler: func(c *cli.Context, err error) {
 			if err != nil {
-				err = cli.Exit(fmt.Sprintf("run [%s] command failed: %s\n", c.Command.FullName(), err), 2)
+				err = cli.Exit(fmt.Sprintf("run [%s] command failed: %s\n", c.Command.FullName(), err), exitCodeError)
 			}
 			cli.HandleExitCoder(err)
 		},

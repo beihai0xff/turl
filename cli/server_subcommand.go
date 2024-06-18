@@ -1,19 +1,13 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"log"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
 	"github.com/urfave/cli/v2"
 
 	"github.com/beiai0xff/turl/api"
 	"github.com/beiai0xff/turl/configs"
-	"github.com/beiai0xff/turl/pkg/shutdown"
 )
 
 type serverCLI struct{}
@@ -30,7 +24,7 @@ func (c *serverCLI) getServerStartFlags() []cli.Flag {
 			Aliases: []string{"p"},
 			Usage:   "turl HTTP server port",
 			Value:   api.DefaultPort,
-			Action: func(ctx *cli.Context, v int) error {
+			Action: func(_ *cli.Context, v int) error {
 				if v >= 65536 || v < 0 {
 					return fmt.Errorf("flag port value %v out of range[0-65535]", v)
 				}
@@ -51,24 +45,23 @@ func (c *serverCLI) getServerStartFlags() []cli.Flag {
 	}
 }
 
-func (c *serverCLI) serverStart(ctx *cli.Context) error {
-	conf := c.parseServerStartConfig(ctx)
-
-	srv := server.Start(conf)
-
-	exitSignal := make(chan os.Signal, 1)
-	signal.Notify(exitSignal, syscall.SIGINT, syscall.SIGTERM)
-	<-exitSignal
-
-	quitCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	shutdown.GracefulShutdown(quitCtx,
-		shutdown.HTTPServerShutdown(srv),
-	)
-
-	_, _ = fmt.Println("HTTP Server exited")
-
+func (c *serverCLI) serverStart(_ *cli.Context) error {
+	// conf := c.parseServerStartConfig(ctx)
+	//
+	// srv := server.Start(conf)
+	//
+	// exitSignal := make(chan os.Signal, 1)
+	// signal.Notify(exitSignal, syscall.SIGINT, syscall.SIGTERM)
+	// <-exitSignal
+	//
+	// quitCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// defer cancel()
+	//
+	// shutdown.GracefulShutdown(quitCtx,
+	// 	shutdown.HTTPServerShutdown(srv),
+	// )
+	//
+	// _, _ = fmt.Println("HTTP Server exited")
 	return nil
 }
 

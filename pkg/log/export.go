@@ -1,7 +1,7 @@
+// Package log provides logging functions
 package log
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -25,6 +25,7 @@ func SetDefaultLogger(c *configs.LogConfig) error {
 //
 // }
 
+// NewLogger new a slog Logger
 func NewLogger(c *configs.LogConfig) (*slog.Logger, error) {
 	w := getWriters(c)
 
@@ -48,6 +49,6 @@ func getLogHandler(w io.Writer, c *configs.LogConfig) (slog.Handler, error) {
 	case configs.EncoderTypeJSON:
 		return slog.NewJSONHandler(w, opts), nil
 	default:
-		return nil, errors.New(fmt.Sprintf("unknown log format %s", c.Format))
+		return nil, fmt.Errorf("unknown log format %s", c.Format)
 	}
 }
