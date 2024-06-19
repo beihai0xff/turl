@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
@@ -72,14 +71,16 @@ func TestNewSequence(t *testing.T) {
 		SeqName:  testSeqName,
 		StartNum: 10000,
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	t.Cleanup(s.Close)
 
-	assert.Equal(t, uint64(100), s.step)
-	assert.Equal(t, uint(1), s.rowID)
-	assert.Equal(t, uint64(10100), s.max)
-	assert.Equal(t, uint64(9999), s.curr.Load())
-	assert.Equal(t, uint64(10000), s.Next(context.Background()))
+	require.Equal(t, uint64(100), s.step)
+	require.Equal(t, uint(1), s.rowID)
+	require.Equal(t, uint64(10100), s.max)
+	require.Equal(t, uint64(10000), s.curr.Load())
+	next, err := s.Next(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, uint64(10000), next)
 }
 func Test_tddlSequence_createRecord(t *testing.T) {
 	gormDB := newMockDB(t)
@@ -118,11 +119,11 @@ func Test_tddlSequence_Next(t *testing.T) {
 	})
 
 	s, err := newSequence(gormDB, &Config{
-		Step:     100,
+		Step:     1000,
 		SeqName:  testSeqName,
 		StartNum: 10000,
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	t.Cleanup(s.Close)
 
 	wg, testDataLength := sync.WaitGroup{}, 10000
@@ -132,7 +133,8 @@ func Test_tddlSequence_Next(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			ch <- s.Next(context.Background())
+			next, _ := s.Next(context.Background())
+			ch <- next
 		}()
 	}
 
@@ -145,17 +147,19 @@ func Test_tddlSequence_Next(t *testing.T) {
 		arr = append(arr, v)
 	}
 
-	assert.Equal(t, testDataLength, len(arr))
+	require.Equal(t, testDataLength, len(arr))
 
 	sort.Slice(arr, func(i, j int) bool {
 		return arr[i] < arr[j]
 	})
 
 	for i, x := range arr {
-		assert.Equal(t, i+10000, int(x))
+		require.Equal(t, i+10000, int(x))
 	}
 
-	assert.Equal(t, testDataLength+10000, int(s.Next(context.Background())))
+	next, err := s.Next(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, testDataLength+10000, int(next))
 }
 
 func Test_tddlSequence_multi_clients(t *testing.T) {
@@ -169,7 +173,7 @@ func Test_tddlSequence_multi_clients(t *testing.T) {
 		SeqName:  testSeqName,
 		StartNum: 10000,
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	t.Cleanup(s1.Close)
 
 	s2, err := newSequence(gormDB, &Config{
@@ -177,7 +181,7 @@ func Test_tddlSequence_multi_clients(t *testing.T) {
 		SeqName:  testSeqName,
 		StartNum: 10000,
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	t.Cleanup(s2.Close)
 
 	wg, testDataLength := sync.WaitGroup{}, 10000
@@ -186,24 +190,17 @@ func Test_tddlSequence_multi_clients(t *testing.T) {
 	go func() {
 		defer wg.Done()
 		for range testDataLength / 2 {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				ch <- s1.Next(context.Background())
-			}()
+			next, _ := s1.Next(context.Background())
+			ch <- next
 		}
 	}()
 
 	wg.Add(1)
 	go func() {
-
 		defer wg.Done()
 		for range testDataLength / 2 {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				ch <- s2.Next(context.Background())
-			}()
+			next, _ := s2.Next(context.Background())
+			ch <- next
 		}
 	}()
 
@@ -216,15 +213,50 @@ func Test_tddlSequence_multi_clients(t *testing.T) {
 		arr = append(arr, v)
 	}
 
-	assert.Equal(t, testDataLength, len(arr))
+	require.Equal(t, testDataLength, len(arr))
 
 	sort.Slice(arr, func(i, j int) bool {
 		return arr[i] < arr[j]
 	})
 
-	for i, x := range arr {
-		assert.Equal(t, i+10000, int(x))
+	for i := 1; i < testDataLength; i++ {
+		require.True(t, arr[i] > arr[i-1])
 	}
 
-	assert.Equal(t, testDataLength+10000, int(s1.Next(context.Background())))
+	next, err := s1.Next(context.Background())
+	require.NoError(t, err)
+	require.LessOrEqual(t, int(next), testDataLength+10100)
+}
+
+func Test_tddlSequence_Next_timeout(t *testing.T) {
+	gormDB := newMockDB(t)
+	t.Cleanup(func() {
+		gormDB.Exec("DELETE FROM sequences")
+	})
+
+	s1, err := newSequence(gormDB, &Config{
+		Step:     10,
+		SeqName:  testSeqName,
+		StartNum: 10000,
+	})
+	require.NoError(t, err)
+	t.Cleanup(s1.Close)
+
+	next, err := s1.Next(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, 10000, int(next))
+
+	// set the deadline to 7 hours ago
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(-7*time.Hour))
+	cancel()
+	// beacuse the deadline is already expired, so the Next should return immediately
+	// but in golang, select multi channels, the order is random, maybe the queue channel is selected first and return next value
+
+	next, err = s1.Next(ctx)
+	require.Equal(t, 0, int(next))
+	require.ErrorIs(t, err, context.DeadlineExceeded)
+
+	next, err = s1.Next(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, 10001, int(next))
 }

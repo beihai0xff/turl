@@ -6,6 +6,7 @@ require (
 	github.com/allegro/bigcache/v3 v3.1.0
 	github.com/fatih/gomodifytags v1.16.0
 	github.com/go-playground/validator/v10 v10.22.0
+	github.com/google/uuid v1.6.0
 	github.com/jedib0t/go-pretty/v6 v6.5.9
 	github.com/redis/go-redis/v9 v9.5.3
 	github.com/samber/lo v1.39.0

@@ -9,6 +9,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/plugin/optimisticlock"
 )
@@ -25,7 +26,7 @@ var (
 // TDDL is the interface of tddl
 type TDDL interface {
 	// Next returns the next sequence number
-	Next(ctx context.Context) uint64
+	Next(ctx context.Context) (uint64, error)
 	// Close closes the tddl
 	Close()
 	// Renew()
@@ -40,19 +41,21 @@ type Sequence struct {
 }
 
 type tddlSequence struct {
-	conn *gorm.DB
+	clientID string
+	conn     *gorm.DB
 
 	// rowID is the row primary key of the sequence
 	rowID uint
 
-	curr atomic.Uint64
 	step uint64
 	max  uint64
+	curr atomic.Uint64
 
 	wg sync.WaitGroup
 
-	sendq, stop chan struct{}
-	recvq       chan uint64
+	stop chan struct{}
+	// TODO: use a buffer channel to avoid blocking
+	queue chan uint64
 }
 
 // New returns a new tddl implementation
@@ -67,12 +70,12 @@ func newSequence(conn *gorm.DB, c *Config) (*tddlSequence, error) {
 	}
 
 	s := tddlSequence{
-		conn:  conn,
-		step:  c.Step,
-		wg:    sync.WaitGroup{},
-		sendq: make(chan struct{}),
-		stop:  make(chan struct{}),
-		recvq: make(chan uint64),
+		clientID: uuid.NewString(),
+		conn:     conn,
+		step:     c.Step,
+		wg:       sync.WaitGroup{},
+		stop:     make(chan struct{}),
+		queue:    make(chan uint64),
 	}
 
 	if err := s.getRowID(c.SeqName, c.StartNum); err != nil {
@@ -135,13 +138,15 @@ func (s *tddlSequence) createRecord(seqName string, startNum uint64) (uint, erro
 // }
 
 func (s *tddlSequence) renew() {
-	seq := Sequence{}
+	var seq = Sequence{}
 
+	// TODO: retry in Exponential backoff
 	for {
+		seq = Sequence{}
 		res := s.conn.Where("id = ?", s.rowID).Take(&seq)
 
 		if res.Error != nil { // update the sequence with cas
-			slog.Warn("failed to get sequence", slog.String("error", res.Error.Error()))
+			slog.Warn("get sequence failed", slog.String("error", res.Error.Error()))
 			time.Sleep(updateTDDLFailedSleepTime)
 
 			continue
@@ -151,11 +156,14 @@ func (s *tddlSequence) renew() {
 		if res.Error == nil && res.RowsAffected == 1 {
 			break
 		}
+
+		slog.Debug("update sequence failed", slog.Uint64("rowsAffected", uint64(res.RowsAffected)))
 	}
 
-	s.curr.Store(seq.Sequence - s.step - 1)
+	s.curr.Store(seq.Sequence - s.step)
 	s.max = seq.Sequence
-	slog.Info("renew tddl sequence success", slog.Group("sequence",
+	slog.Debug("renew tddl sequence success", slog.Group("sequence",
+		slog.String("clientID", s.clientID),
 		slog.String("name", seq.Name),
 		slog.Uint64("maxSequence", seq.Sequence),
 		slog.Uint64("currSequence", s.curr.Load()),
@@ -163,15 +171,20 @@ func (s *tddlSequence) renew() {
 }
 
 // Next returns the next sequence number
-func (s *tddlSequence) Next(ctx context.Context) uint64 {
-	s.sendq <- struct{}{}
+func (s *tddlSequence) Next(ctx context.Context) (uint64, error) {
+	// if ctx is already done, return immediately
+	select {
+	case <-ctx.Done():
+		return 0, ctx.Err()
+	default:
+	}
 
 	for {
 		select {
 		case <-ctx.Done():
-			return 0
-		case next := <-s.recvq:
-			return next
+			return 0, ctx.Err()
+		case next := <-s.queue:
+			return next, nil
 		}
 	}
 }
@@ -179,16 +192,16 @@ func (s *tddlSequence) Next(ctx context.Context) uint64 {
 func (s *tddlSequence) worker() {
 	defer s.wg.Done()
 
+	next := s.curr.Load()
+
 	for {
 		select {
-		case <-s.sendq:
-			next := s.curr.Add(1)
+		case s.queue <- next:
+			next = s.curr.Add(1)
 			for next >= s.max { // the serial number has been exhausted
 				s.renew()
-				next = s.curr.Add(1)
+				next = s.curr.Load()
 			}
-
-			s.recvq <- next
 		case <-s.stop:
 			return
 		}
