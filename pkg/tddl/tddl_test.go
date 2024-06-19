@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
-	"github.com/beiai0xff/turl/pkg/db"
+	"github.com/beiai0xff/turl/pkg/db/mysql"
 	"github.com/beiai0xff/turl/test"
 )
 
@@ -22,7 +22,7 @@ const (
 )
 
 func TestMain(m *testing.M) {
-	db, err := db.NewDB(test.DSN)
+	db, err := mysql.New(test.DSN)
 	if err != nil {
 		panic(err)
 	}
@@ -38,7 +38,7 @@ func TestMain(m *testing.M) {
 }
 
 func newMockDB(t *testing.T) *gorm.DB {
-	db, err := db.NewDB(test.DSN)
+	db, err := mysql.New(test.DSN)
 	require.NoError(t, err)
 
 	return db

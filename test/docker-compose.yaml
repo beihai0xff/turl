@@ -4,6 +4,7 @@ services:
 
   mysql:
     image: mysql
+    container_name: mysql
     restart: always
     ports:
       - "3306:3306"
@@ -11,4 +12,20 @@ services:
       MYSQL_DATABASE: tiny-url
       MYSQL_ROOT_PASSWORD: test123
     healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      test: ["CMD", 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p$$MYSQL_ROOT_PASSWORD' ]
+      timeout: 10s
+      retries: 5
+      interval: 3s
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 60 1 --loglevel warning
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      timeout: 10s
+      retries: 5
+      interval: 3s
