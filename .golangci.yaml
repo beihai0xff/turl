@@ -5,16 +5,6 @@ run:
   # Default: 1m
   timeout: 5m
   tests: false
-  # Which dirs to skip: issues from them won't be reported.
-  skip-dirs:
-    - test
-    - third_party
-  # Which files to skip: they will be analyzed, but issues from them won't be reported.
-  skip-files:
-    - _test.go
-    - _mock.go
-    - ".*\\.pb\\.go"
-    - ".*\\.gen\\.go"
 linters:
   disable-all: true
   enable: # please keep this alphabetized
@@ -29,7 +19,7 @@ linters:
     - goconst
     - gocritic
     - gofmt
-    - gomnd
+    - mnd
     - gocyclo
     - gosec
     - gosimple
@@ -62,8 +52,6 @@ linters-settings: # please keep this alphabetized
       - name: atomic
         severity: warning
       - name: package-comments
-      - name: unhandled-error
-        arguments : ["fmt.Printf"]
       - name: blank-imports
       - name: context-as-argument
       - name: context-keys-type
@@ -110,10 +98,6 @@ linters-settings: # please keep this alphabetized
   staticcheck:
     checks:
       - "all"
-      - "-SA1019" # TODO(fix) Using a deprecated function, variable, constant or field
-  stylecheck:
-    checks:
-      - "ST1019"  # Importing the same package multiple times.
 
   lll:
     line-length: 120
@@ -123,6 +107,16 @@ linters-settings: # please keep this alphabetized
     min-complexity: 8
 
 issues:
+  # Which dirs to skip: issues from them won't be reported.
+  exclude-dirs:
+    - test
+    - third_party
+  # Which files to skip: they will be analyzed, but issues from them won't be reported.
+  exclude-files:
+    - _test.go
+    - _mock.go
+    - ".*\\.pb\\.go"
+    - ".*\\.gen\\.go"
   # List of regexps of issue texts to exclude.
   include:
     - EXC0012  # EXC0012 revive: exported (.+) should have comment( \(or a comment on this block\))? or be unexported
@@ -146,7 +140,7 @@ output:
   # Example: "checkstyle:report.json,colored-line-number"
   #
   # Default: colored-line-number
-  format: colored-line-number,github-actions
+  formats: colored-line-number
   # Print lines of code with issue.
   # Default: true
   print-issued-lines: false
