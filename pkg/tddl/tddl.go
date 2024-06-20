@@ -12,10 +12,14 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/plugin/optimisticlock"
+
+	"github.com/beiai0xff/turl/pkg/workqueue"
 )
 
-// updateTDDLFailedSleepTime is the sleep time when update tddl failed
-const updateTDDLFailedSleepTime = 10 * time.Millisecond
+const (
+	// retryInterval is the retry start interval when update tddl failed
+	retryInterval = 10 * time.Millisecond
+)
 
 var (
 	// ErrStepTooSmall is the error of step too small
@@ -56,6 +60,8 @@ type tddlSequence struct {
 	stop chan struct{}
 	// TODO: use a buffer channel to avoid blocking
 	queue chan uint64
+
+	rateLimiter workqueue.RateLimiter[any]
 }
 
 // New returns a new tddl implementation
@@ -70,12 +76,13 @@ func newSequence(conn *gorm.DB, c *Config) (*tddlSequence, error) {
 	}
 
 	s := tddlSequence{
-		clientID: uuid.NewString(),
-		conn:     conn,
-		step:     c.Step,
-		wg:       sync.WaitGroup{},
-		stop:     make(chan struct{}),
-		queue:    make(chan uint64),
+		clientID:    uuid.NewString(),
+		conn:        conn,
+		step:        c.Step,
+		wg:          sync.WaitGroup{},
+		stop:        make(chan struct{}),
+		queue:       make(chan uint64),
+		rateLimiter: workqueue.NewItemExponentialFailureRateLimiter[any](retryInterval, time.Minute),
 	}
 
 	if err := s.getRowID(c.SeqName, c.StartNum); err != nil {
@@ -137,27 +144,35 @@ func (s *tddlSequence) createRecord(seqName string, startNum uint64) (uint, erro
 // 	s.wg.Wait()
 // }
 
+// renew function renews the sequence number
+// should be called in a single goroutine
 func (s *tddlSequence) renew() {
+	defer s.rateLimiter.Forget(s.clientID) // forget the retry times
+
 	var seq = Sequence{}
 
-	// TODO: retry in Exponential backoff
 	for {
+		select {
+		case <-s.stop: // receive stop signal
+			return
+		default:
+		}
+
 		seq = Sequence{}
-		res := s.conn.Where("id = ?", s.rowID).Take(&seq)
+		res := s.conn.Where("id = ?", s.rowID).Take(&seq) // update the sequence with cas
 
-		if res.Error != nil { // update the sequence with cas
+		if res.Error == nil {
+			res = s.conn.Model(&seq).Update("sequence", seq.Sequence+s.step)
+			if res.Error == nil && res.RowsAffected == 1 {
+				break
+			}
+
+			slog.Debug("cas sequence failed")
+		} else {
 			slog.Warn("get sequence failed", slog.String("error", res.Error.Error()))
-			time.Sleep(updateTDDLFailedSleepTime)
-
-			continue
 		}
 
-		res = s.conn.Model(&seq).Update("sequence", seq.Sequence+s.step)
-		if res.Error == nil && res.RowsAffected == 1 {
-			break
-		}
-
-		slog.Debug("update sequence failed", slog.Uint64("rowsAffected", uint64(res.RowsAffected)))
+		time.Sleep(s.rateLimiter.When(s.clientID))
 	}
 
 	s.curr.Store(seq.Sequence - s.step)
@@ -167,6 +182,7 @@ func (s *tddlSequence) renew() {
 		slog.String("name", seq.Name),
 		slog.Uint64("maxSequence", seq.Sequence),
 		slog.Uint64("currSequence", s.curr.Load()),
+		slog.Int("retryTimes", s.rateLimiter.Retries(s.clientID)),
 	))
 }
 
