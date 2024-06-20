@@ -80,7 +80,7 @@ func (r *ItemExponentialFailureRateLimiter[T]) When(item T) time.Duration {
 	r.failures[item]++
 
 	// The backoff is capped such that 'calculated' value never overflows.
-	backoff := float64(r.baseDelay.Nanoseconds()) * math.Pow(2, float64(exp)) // nolint: mnd
+	backoff := float64(r.baseDelay.Nanoseconds()) * math.Pow(2, float64(exp)) //nolint: mnd
 	if backoff > math.MaxInt64 {
 		return r.maxDelay
 	}
