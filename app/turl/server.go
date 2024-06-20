@@ -31,3 +31,15 @@ func newTinyURL(db storage.Storage, dcache, lcache cache.Interface) *TinyURL {
 // func (t *TinyURL) Retrieve(short string) error {
 // 	return nil
 // }
+//
+// func (t *TinyURL) Close() error {
+// 	if err := t.db.Close(); err != nil {
+// 		return err
+// 	}
+//
+// 	if err := t.distributedCache.Close(); err != nil {
+// 		return err
+// 	}
+//
+// 	return t.localCache.Close()
+// }
