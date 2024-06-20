@@ -77,6 +77,7 @@ func pow(n int) int {
 			if n == 0 {
 				return 1
 			}
+
 			return 58
 		}
 
@@ -96,7 +97,6 @@ func pow(n int) int {
 			if n < 8 {
 				if n == 6 {
 					return 38068692544
-
 				}
 
 				return 2207984167552
@@ -109,8 +109,6 @@ func pow(n int) int {
 	}
 }
 
-// index returns the index of a character in the base58 alphabet
-
 // according to the below benchmarks, this implementation is twice faster than using bytes.IndexByte
 // and six times faster than using a map
 // BenchmarkIndex-8          	870152160	         1.314 ns/op	       0 B/op	       0 allocs/op
@@ -119,6 +117,9 @@ func pow(n int) int {
 // BenchmarkIndexMap
 // BenchmarkIndexMap-8       	147732596	         8.102 ns/op	       0 B/op	       0 allocs/op
 
+// index returns the index of a character in the base58 alphabet
+//
+//nolint:gocyclo, mnd
 func index(char byte) int {
 	if char >= '1' && char <= '9' {
 		return int(char - '1')
