@@ -81,7 +81,6 @@ linters-settings: # please keep this alphabetized
         arguments:
           - 3
       - name: empty-block
-      - name: confusing-naming
       - name: superfluous-else
       - name: unused-parameter
       - name: unreachable-code

@@ -260,3 +260,29 @@ func Test_tddlSequence_Next_timeout(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 10001, int(next))
 }
+
+func Test_tddlSequence_renew_failed(t *testing.T) {
+	gormDB := newMockDB(t)
+	t.Cleanup(func() {
+		gormDB.Exec("DELETE FROM sequences")
+	})
+
+	s, err := newSequence(gormDB, &Config{
+		Step:     1,
+		SeqName:  testSeqName,
+		StartNum: 10000,
+	})
+	require.NoError(t, err)
+
+	sqlDB, _ := gormDB.DB()
+	sqlDB.Close()
+
+	go func() {
+		time.Sleep(time.Second)
+		// should retry 7 times
+		require.Equal(t, 7, s.rateLimiter.Retries(s.clientID))
+		s.Close()
+	}()
+
+	s.renew()
+}

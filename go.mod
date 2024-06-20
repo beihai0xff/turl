@@ -14,6 +14,7 @@ require (
 	github.com/swaggo/swag v1.16.3
 	github.com/urfave/cli/v2 v2.27.2
 	go.uber.org/mock v0.4.0
+	golang.org/x/time v0.5.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gorm.io/driver/mysql v1.5.7
 	gorm.io/gorm v1.25.10
