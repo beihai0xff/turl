@@ -1,6 +1,7 @@
-// Package workqueue provides a simple queue
-// rate_limiters.go provides rate limiters for workqueue
-// this package learn from https://github.com/kubernetes/client-go/blob/master/util/workqueue
+// Package workqueue provides a simple queue that used to rate limit or retry processing of requests.
+// This package learn from https://github.com/kubernetes/client-go/blob/master/util/workqueue,
+// you can find more RateLimiter implementation in the original package.
+// rate_limiters.go provides rate limiters implementation for workqueue.
 package workqueue
 
 import (
@@ -16,14 +17,14 @@ import (
 type RateLimiter[T comparable] interface {
 	// When gets an item and gets to decide how long that item should wait
 	When(item T) time.Duration
-	// Forget indicates that an item is finished being retried.  Doesn't matter whether it's for failing
+	// Forget indicates that an item is finished being retried. Doesn't matter whether it's for failing
 	// or for success, we'll stop tracking it
 	Forget(item T)
 	// Retries returns back how many failures the item has had
 	Retries(item T) int
 }
 
-// BucketRateLimiter adapts a standard bucket to the workqueue ratelimiter API
+// BucketRateLimiter adapts a standard bucket to the RateLimiter API
 type BucketRateLimiter[T comparable] struct {
 	*rate.Limiter
 }
@@ -79,7 +80,7 @@ func (r *ItemExponentialFailureRateLimiter[T]) When(item T) time.Duration {
 	r.failures[item]++
 
 	// The backoff is capped such that 'calculated' value never overflows.
-	backoff := float64(r.baseDelay.Nanoseconds()) * math.Pow(2, float64(exp)) //nolint: mnd
+	backoff := float64(r.baseDelay.Nanoseconds()) * math.Pow(2, float64(exp)) // nolint: mnd
 	if backoff > math.MaxInt64 {
 		return r.maxDelay
 	}
