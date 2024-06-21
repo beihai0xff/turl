@@ -4,6 +4,7 @@ package mapping
 
 import (
 	"errors"
+	"fmt"
 )
 
 const (
@@ -12,13 +13,53 @@ const (
 )
 
 var (
+	// ErrInvalidInput base error for invalid input
+	ErrInvalidInput = errors.New("base58 invalid input")
 	// ErrBase58Overflow is returned when the number to decode is too large, greater than eight bytes
-	ErrBase58Overflow = errors.New("base58: number is too large to decode")
+	ErrBase58Overflow = fmt.Errorf("%w: number is too large", ErrInvalidInput)
 	// ErrorInvalidCharacter is returned when an invalid character is found in the input
-	ErrorInvalidCharacter = errors.New("base58: invalid character in input")
+	ErrorInvalidCharacter = fmt.Errorf("%w: invalid character in input", ErrInvalidInput)
 
 	chars = []byte("123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz")
+
+	// indices is an array of indices of characters in the base58 alphabet
+
+	// according to the below benchmarks, this implementation is nearly ten faster than using bytes.IndexByte, and it doesn't allocate memory
+	// BenchmarkIndexArray
+	// BenchmarkIndexArray-8          	1000000000	         0.3158 ns/op	       0 B/op	       0 allocs/op
+	// BenchmarkIndex
+	// BenchmarkIndex-8               	902548872	         1.320 ns/op	       0 B/op	       0 allocs/op
+	// BenchmarkStandardIndexByte
+	// BenchmarkStandardIndexByte-8   	427854204	         2.876 ns/op	       0 B/op	       0 allocs/op
+	// BenchmarkIndexMap
+	// BenchmarkIndexMap-8            	146482124	         8.188 ns/op	       0 B/op	       0 allocs/op
+	indices = [256]int{}
+
+	// pow58 returns 58^n
+	// according to the below benchmarks, this implementation is sixteen times faster than calculating the power
+	// and thirty times faster than using math.Pow
+	// BenchmarkPowArray
+	// BenchmarkPowArray-8            	1000000000	         0.3565 ns/op	       0 B/op	       0 allocs/op
+	// BenchmarkPowCompute
+	// BenchmarkPowCompute-8          	204542810	         5.839 ns/op	       0 B/op	       0 allocs/op
+	// BenchmarkMathPow
+	// BenchmarkMathPow-8             	100000000	        10.09 ns/op	       0 B/op	       0 allocs/op
+	pow58 = [9]int{}
 )
+
+func init() {
+	for i := range indices {
+		indices[i] = -1
+	}
+
+	for i, char := range chars {
+		indices[char] = i
+	}
+
+	for i := range pow58 {
+		pow58[i] = pow(carry, i)
+	}
+}
 
 // Base58Encode encodes a number to base58
 func Base58Encode(num uint64) []byte {
@@ -42,12 +83,12 @@ func Base58Decode(b []byte) (uint64, error) {
 	var num uint64
 
 	for i := range n {
-		pos := index(b[i])
+		pos := indices[b[i]]
 		if pos == -1 {
 			return 0, ErrorInvalidCharacter
 		}
 
-		num += uint64(pow(n-i-1) * pos)
+		num += uint64(pow58[n-i-1] * pos)
 	}
 
 	return num, nil
@@ -59,93 +100,14 @@ func reverse(a []byte) {
 	}
 }
 
-// pow returns 58^n
-// according to the below benchmarks, this implementation is sixteen times faster than calculating the power
-// and thirty times faster than using math.Pow
-// BenchmarkPow
-// BenchmarkPow-8            	1000000000	         0.3520 ns/op	       0 B/op	       0 allocs/op
-// BenchmarkPowC
-// BenchmarkPowC-8           	203575606	         5.851 ns/op	       0 B/op	       0 allocs/op
-// BenchmarkMathPow
-// BenchmarkMathPow-8        	100000000	        10.25 ns/op	       0 B/op	       0 allocs/op
-
-//nolint:mnd, gocyclo
-func pow(n int) int {
-	switch {
-	case n < 4:
-		if n < 2 {
-			if n == 0 {
-				return 1
-			}
-
-			return 58
-		}
-
-		if n == 2 {
-			return 3364
-		}
-
-		return 195112
-	case n < 9:
-		if n < 6 {
-			if n == 4 {
-				return 11316496
-			}
-
-			return 656356768
-		} else {
-			if n < 8 {
-				if n == 6 {
-					return 38068692544
-				}
-
-				return 2207984167552
-			}
-
-			return 128063081718016
-		}
-	default:
-		return 0
-	}
-}
-
-// according to the below benchmarks, this implementation is twice faster than using bytes.IndexByte
-// and six times faster than using a map
-// BenchmarkIndex-8          	870152160	         1.314 ns/op	       0 B/op	       0 allocs/op
-// BenchmarkIndexByte
-// BenchmarkIndexByte-8      	434694481	         2.758 ns/op	       0 B/op	       0 allocs/op
-// BenchmarkIndexMap
-// BenchmarkIndexMap-8       	147732596	         8.102 ns/op	       0 B/op	       0 allocs/op
-
-// index returns the index of a character in the base58 alphabet
-//
-//nolint:gocyclo, mnd
-func index(char byte) int {
-	if char >= '1' && char <= '9' {
-		return int(char - '1')
+func pow(x, n int) int {
+	if n == 0 {
+		return 1
 	}
 
-	if char >= 'A' && char <= 'Z' {
-		if char < 'I' {
-			return int(char - 'A' + 9)
-		}
-
-		if char > 'O' {
-			return int(char - 'A' + 7)
-		}
-
-		if char > 'I' && char < 'O' {
-			return int(char - 'A' + 8)
-		}
+	if n%2 == 0 {
+		return pow(x*x, n/2) //nolint:mnd
 	}
 
-	if char >= 'a' && char <= 'z' {
-		if char < 'l' {
-			return int(char - 'a' + 33)
-		} else if char > 'l' {
-			return int(char - 'm' + 44)
-		}
-	}
-
-	return -1
+	return x * pow(x, n-1)
 }
