@@ -4,17 +4,19 @@ import (
 	"context"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
+	"github.com/beiai0xff/turl/configs"
 	"github.com/beiai0xff/turl/pkg/db/mysql"
 	"github.com/beiai0xff/turl/pkg/db/redis"
 	"github.com/beiai0xff/turl/test"
 )
 
 func TestMain(m *testing.M) {
-	db, _ := mysql.New(test.DSN)
+	db, _ := mysql.New(&configs.MySQLConfig{DSN: test.DSN})
 
 	db.AutoMigrate(&TinyURL{})
 
@@ -22,8 +24,8 @@ func TestMain(m *testing.M) {
 }
 
 func TestNew(t *testing.T) {
-	db, _ := mysql.New(test.DSN)
-	rdb := redis.Client(test.RedisAddr)
+	db, _ := mysql.New(&configs.MySQLConfig{DSN: test.DSN})
+	rdb := redis.Client(&configs.RedisConfig{Addr: test.RedisAddr, DialTimeout: time.Second})
 
 	s := New(db, rdb)
 	t.Cleanup(func() {
@@ -34,8 +36,8 @@ func TestNew(t *testing.T) {
 }
 
 func Test_newStorage(t *testing.T) {
-	db, _ := mysql.New(test.DSN)
-	rdb := redis.Client(test.RedisAddr)
+	db, _ := mysql.New(&configs.MySQLConfig{DSN: test.DSN})
+	rdb := redis.Client(&configs.RedisConfig{Addr: test.RedisAddr, DialTimeout: time.Second})
 
 	s := newStorage(db, rdb)
 	t.Cleanup(func() {
@@ -46,8 +48,8 @@ func Test_newStorage(t *testing.T) {
 }
 
 func Test_storage_GetTinyURLByID(t *testing.T) {
-	db, _ := mysql.New(test.DSN)
-	rdb := redis.Client(test.RedisAddr)
+	db, _ := mysql.New(&configs.MySQLConfig{DSN: test.DSN})
+	rdb := redis.Client(&configs.RedisConfig{Addr: test.RedisAddr, DialTimeout: time.Second})
 
 	short, long := uint64(10000), []byte("www.google.com")
 	s, ctx := newStorage(db, rdb), context.Background()

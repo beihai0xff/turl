@@ -1,5 +1,5 @@
 // Package lcahce provides the local cache
-package lcahce
+package cache
 
 import (
 	"context"
@@ -7,23 +7,21 @@ import (
 	"time"
 
 	"github.com/allegro/bigcache/v3"
-
-	"github.com/beiai0xff/turl/pkg/cache"
 )
 
 var (
-	_             cache.Interface = (*localCache)(nil)
-	errInvalidCap                 = errors.New("cache: invalid capacity")
+	_             Interface = (*localCache)(nil)
+	errInvalidCap           = errors.New("cache: invalid capacity")
 )
 
 type localCache struct {
 	cache *bigcache.BigCache
 }
 
-// New create a local cache
+// NewLocalCache create a local cache
 // capacity is the cache capacity
 // ttl is the time to live
-func New(capacity int, ttl time.Duration) (cache.Interface, error) {
+func NewLocalCache(capacity int, ttl time.Duration) (Interface, error) {
 	return newLocalCache(capacity, ttl)
 }
 
@@ -53,7 +51,7 @@ func (l *localCache) Set(_ context.Context, k string, v []byte, _ time.Duration)
 func (l *localCache) Get(_ context.Context, k string) ([]byte, error) {
 	v, err := l.cache.Get(k)
 	if err != nil && errors.Is(err, bigcache.ErrEntryNotFound) {
-		return nil, cache.ErrCacheMiss
+		return nil, ErrCacheMiss
 	}
 
 	return v, err

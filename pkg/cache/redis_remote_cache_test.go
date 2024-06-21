@@ -1,4 +1,4 @@
-package dcache
+package cache
 
 import (
 	"context"
@@ -7,22 +7,22 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/beiai0xff/turl/pkg/cache"
+	"github.com/beiai0xff/turl/configs"
 	"github.com/beiai0xff/turl/test"
 )
 
 func TestNewRedisCache(t *testing.T) {
-	got := NewRedis(test.RedisAddr)
+	got := NewRedisRemoteCache(&configs.RedisConfig{Addr: test.RedisAddr, DialTimeout: time.Second})
 	require.NotNil(t, got)
 }
 
 func Test_newRedisCache(t *testing.T) {
-	got := newRedisCache(test.RedisAddr)
+	got := NewRedisRemoteCache(&configs.RedisConfig{Addr: test.RedisAddr, DialTimeout: time.Second})
 	require.NotNil(t, got)
 }
 
 func Test_redisCache_Set(t *testing.T) {
-	c := newRedisCache(test.RedisAddr)
+	c := newRedisCache(&configs.RedisConfig{Addr: test.RedisAddr, DialTimeout: time.Second})
 	t.Cleanup(
 		func() {
 			c.Close()
@@ -34,7 +34,7 @@ func Test_redisCache_Set(t *testing.T) {
 }
 
 func Test_redisCache_Get(t *testing.T) {
-	c := newRedisCache(test.RedisAddr)
+	c := newRedisCache(&configs.RedisConfig{Addr: test.RedisAddr, DialTimeout: time.Second})
 	t.Cleanup(
 		func() {
 			c.Close()
@@ -49,6 +49,6 @@ func Test_redisCache_Get(t *testing.T) {
 
 	// test cache miss
 	got, err = c.Get(ctx, "empty")
-	require.ErrorIs(t, err, cache.ErrCacheMiss)
+	require.ErrorIs(t, err, ErrCacheMiss)
 	require.Nil(t, got)
 }

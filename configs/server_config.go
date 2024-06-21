@@ -20,6 +20,14 @@ type ServerConfig struct {
 	// LogOutput is the log output of turl server
 	// should be one of [console, file], can not be nil or empty
 	LogOutput []string `validate:"required,min=1" json:"log_output" yaml:"log_output" mapstructure:"log_output"`
+
+	// TDDLConfig is the tddl config of turl server
+	TDDLConfig *TDDLConfig `json:"tddl" yaml:"tddl" mapstructure:"tddl"`
+
+	// MySQLConfig is the mysql config of turl server
+	MySQLConfig *MySQLConfig `json:"mysql" yaml:"mysql" mapstructure:"mysql"`
+	// CacheConfig is the cache config of turl server
+	CacheConfig *CacheConfig `json:"redis" yaml:"redis" mapstructure:"redis"`
 }
 
 var (
