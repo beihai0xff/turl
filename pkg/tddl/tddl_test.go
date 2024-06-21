@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
+	"github.com/beiai0xff/turl/configs"
 	"github.com/beiai0xff/turl/pkg/db/mysql"
 	"github.com/beiai0xff/turl/test"
 )
@@ -21,7 +22,7 @@ const (
 )
 
 func TestMain(m *testing.M) {
-	db, err := mysql.New(test.DSN)
+	db, err := mysql.New(&configs.MySQLConfig{DSN: test.DSN})
 	if err != nil {
 		panic(err)
 	}
@@ -37,7 +38,7 @@ func TestMain(m *testing.M) {
 }
 
 func newMockDB(t *testing.T) *gorm.DB {
-	db, err := mysql.New(test.DSN)
+	db, err := mysql.New(&configs.MySQLConfig{DSN: test.DSN})
 	require.NoError(t, err)
 
 	return db
@@ -49,7 +50,7 @@ func TestNewSequence_Interface(t *testing.T) {
 		gormDB.Exec("DELETE FROM sequences")
 	})
 
-	_, err := New(gormDB, &Config{
+	_, err := New(gormDB, &configs.TDDLConfig{
 		Step:     10,
 		SeqName:  testSeqName,
 		StartNum: 10000,
@@ -66,7 +67,7 @@ func TestNewSequence(t *testing.T) {
 		gormDB.Exec("DELETE FROM sequences")
 	})
 
-	s, err := newSequence(gormDB, &Config{
+	s, err := newSequence(gormDB, &configs.TDDLConfig{
 		Step:     100,
 		SeqName:  testSeqName,
 		StartNum: 10000,
@@ -118,7 +119,7 @@ func Test_tddlSequence_Next(t *testing.T) {
 		gormDB.Exec("DELETE FROM sequences")
 	})
 
-	s, err := newSequence(gormDB, &Config{
+	s, err := newSequence(gormDB, &configs.TDDLConfig{
 		Step:     1000,
 		SeqName:  testSeqName,
 		StartNum: 10000,
@@ -168,7 +169,7 @@ func Test_tddlSequence_multi_clients(t *testing.T) {
 		gormDB.Exec("DELETE FROM sequences")
 	})
 
-	s1, err := newSequence(gormDB, &Config{
+	s1, err := newSequence(gormDB, &configs.TDDLConfig{
 		Step:     100,
 		SeqName:  testSeqName,
 		StartNum: 10000,
@@ -176,7 +177,7 @@ func Test_tddlSequence_multi_clients(t *testing.T) {
 	require.NoError(t, err)
 	t.Cleanup(s1.Close)
 
-	s2, err := newSequence(gormDB, &Config{
+	s2, err := newSequence(gormDB, &configs.TDDLConfig{
 		Step:     100,
 		SeqName:  testSeqName,
 		StartNum: 10000,
@@ -234,7 +235,7 @@ func Test_tddlSequence_Next_timeout(t *testing.T) {
 		gormDB.Exec("DELETE FROM sequences")
 	})
 
-	s1, err := newSequence(gormDB, &Config{
+	s1, err := newSequence(gormDB, &configs.TDDLConfig{
 		Step:     10,
 		SeqName:  testSeqName,
 		StartNum: 10000,
@@ -267,7 +268,7 @@ func Test_tddlSequence_renew_failed(t *testing.T) {
 		gormDB.Exec("DELETE FROM sequences")
 	})
 
-	s, err := newSequence(gormDB, &Config{
+	s, err := newSequence(gormDB, &configs.TDDLConfig{
 		Step:     1,
 		SeqName:  testSeqName,
 		StartNum: 10000,

@@ -1,4 +1,4 @@
-package lcahce
+package cache
 
 import (
 	"context"
@@ -6,12 +6,10 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-
-	"github.com/beiai0xff/turl/pkg/cache"
 )
 
 func TestNew(t *testing.T) {
-	c, err := New(1e6, 10*time.Minute)
+	c, err := NewLocalCache(1e6, 10*time.Minute)
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		c.Close()
@@ -72,6 +70,6 @@ func Test_localCache_Get(t *testing.T) {
 	require.Equal(t, v, got)
 
 	got, err = c.Get(context.Background(), "empty_get")
-	require.ErrorIs(t, err, cache.ErrCacheMiss)
+	require.ErrorIs(t, err, ErrCacheMiss)
 	require.Nil(t, got)
 }

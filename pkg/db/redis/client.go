@@ -1,11 +1,16 @@
 // Package redis provides a redis client
 package redis
 
-import "github.com/redis/go-redis/v9"
+import (
+	"github.com/redis/go-redis/v9"
+
+	"github.com/beiai0xff/turl/configs"
+)
 
 // Client returns a redis client
-func Client(addr []string) redis.UniversalClient {
+func Client(c *configs.RedisConfig) redis.UniversalClient {
 	return redis.NewUniversalClient(&redis.UniversalOptions{
-		Addrs: addr,
+		Addrs:       c.Addr,
+		DialTimeout: c.DialTimeout,
 	})
 }

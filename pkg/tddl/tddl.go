@@ -13,6 +13,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/plugin/optimisticlock"
 
+	"github.com/beiai0xff/turl/configs"
 	"github.com/beiai0xff/turl/pkg/workqueue"
 )
 
@@ -65,12 +66,12 @@ type tddlSequence struct {
 }
 
 // New returns a new tddl implementation
-func New(conn *gorm.DB, c *Config) (TDDL, error) {
+func New(conn *gorm.DB, c *configs.TDDLConfig) (TDDL, error) {
 	return newSequence(conn, c)
 }
 
 // newSequence creates a new tddlSequence instance
-func newSequence(conn *gorm.DB, c *Config) (*tddlSequence, error) {
+func newSequence(conn *gorm.DB, c *configs.TDDLConfig) (*tddlSequence, error) {
 	if c.Step < 1 {
 		return nil, ErrStepTooSmall
 	}
