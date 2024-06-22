@@ -45,6 +45,11 @@ type Sequence struct {
 	Version  optimisticlock.Version
 }
 
+// TableName returns the table name of the Sequence model
+func (Sequence) TableName() string {
+	return "sequences"
+}
+
 type tddlSequence struct {
 	clientID string
 	conn     *gorm.DB

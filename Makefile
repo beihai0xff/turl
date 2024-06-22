@@ -25,6 +25,7 @@ lint:
 	golangci-lint run -v
 
 gen/mock:
+	bash -x scripts/gen_mock.sh
 
 gen/struct_tag:
 	bash -x scripts/gen_configs_struct_tag.sh
@@ -33,7 +34,7 @@ gen/swagger:
 	swag init --parseDependency --parseDepth 1 -g app/turl/server/http_controller.go -o docs/swagger
 
 test: bootstrap gen/mock
-	docker compose -f ./test/docker-compose.yaml up -d --wait
+	docker compose -f ./tests/docker-compose.yaml up -d --wait
 	go test -gcflags="all=-l" -race -coverprofile=coverage.out -v ./...
 
 

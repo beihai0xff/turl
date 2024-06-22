@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: '1.22.x'
           check-latest: true
@@ -38,13 +38,19 @@ jobs:
     name: Unittest
     strategy:
       matrix:
-        go-version: [ 1.21.x, 1.22.x ]
         os: [ ubuntu-latest ]
     runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.x'
+          check-latest: true
+          cache-dependency-path: |
+            ./go.sum
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3

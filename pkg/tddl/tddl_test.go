@@ -13,8 +13,8 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/beiai0xff/turl/configs"
+	"github.com/beiai0xff/turl/internal/tests"
 	"github.com/beiai0xff/turl/pkg/db/mysql"
-	"github.com/beiai0xff/turl/test"
 )
 
 const (
@@ -22,23 +22,16 @@ const (
 )
 
 func TestMain(m *testing.M) {
-	db, err := mysql.New(&configs.MySQLConfig{DSN: test.DSN})
-	if err != nil {
-		panic(err)
-	}
+	tests.CreateTable(&Sequence{})
 
-	err = db.AutoMigrate(&Sequence{})
-	if err != nil {
-		panic(err)
-	}
+	code := m.Run()
+	tests.DropTDDLTable(&Sequence{})
 
-	exitCode := m.Run()
-	db.Exec("DROP TABLE sequences")
-	os.Exit(exitCode)
+	os.Exit(code)
 }
 
 func newMockDB(t *testing.T) *gorm.DB {
-	db, err := mysql.New(&configs.MySQLConfig{DSN: test.DSN})
+	db, err := mysql.New(&configs.MySQLConfig{DSN: tests.DSN})
 	require.NoError(t, err)
 
 	return db
