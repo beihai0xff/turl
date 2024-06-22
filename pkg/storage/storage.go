@@ -28,6 +28,11 @@ type TinyURL struct {
 	Short   uint64 `gorm:"type:BIGINT;index;not null" json:"short"`    // The shortened URL ID.
 }
 
+// TableName returns the table name of the TinyURL model.
+func (TinyURL) TableName() string {
+	return "tiny_urls"
+}
+
 // storage is a concrete implementation of the Storage interface.
 type storage struct {
 	db  *gorm.DB              // Database client.

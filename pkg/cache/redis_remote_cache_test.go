@@ -8,21 +8,21 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/beiai0xff/turl/configs"
-	"github.com/beiai0xff/turl/test"
+	"github.com/beiai0xff/turl/internal/tests"
 )
 
 func TestNewRedisCache(t *testing.T) {
-	got := NewRedisRemoteCache(&configs.RedisConfig{Addr: test.RedisAddr, DialTimeout: time.Second})
+	got := NewRedisRemoteCache(&configs.RedisConfig{Addr: tests.RedisAddr, DialTimeout: time.Second})
 	require.NotNil(t, got)
 }
 
 func Test_newRedisCache(t *testing.T) {
-	got := NewRedisRemoteCache(&configs.RedisConfig{Addr: test.RedisAddr, DialTimeout: time.Second})
+	got := NewRedisRemoteCache(&configs.RedisConfig{Addr: tests.RedisAddr, DialTimeout: time.Second})
 	require.NotNil(t, got)
 }
 
 func Test_redisCache_Set(t *testing.T) {
-	c := newRedisCache(&configs.RedisConfig{Addr: test.RedisAddr, DialTimeout: time.Second})
+	c := newRedisCache(&configs.RedisConfig{Addr: tests.RedisAddr, DialTimeout: time.Second})
 	t.Cleanup(
 		func() {
 			c.Close()
@@ -34,7 +34,7 @@ func Test_redisCache_Set(t *testing.T) {
 }
 
 func Test_redisCache_Get(t *testing.T) {
-	c := newRedisCache(&configs.RedisConfig{Addr: test.RedisAddr, DialTimeout: time.Second})
+	c := newRedisCache(&configs.RedisConfig{Addr: tests.RedisAddr, DialTimeout: time.Second})
 	t.Cleanup(
 		func() {
 			c.Close()

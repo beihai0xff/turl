@@ -15,7 +15,7 @@ var (
 // Instance returns a singleton instance of validator.
 func Instance() *validator.Validate {
 	once.Do(func() {
-		v = validator.New()
+		v = validator.New(validator.WithRequiredStructEnabled())
 	})
 
 	return v

@@ -8,14 +8,14 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/beiai0xff/turl/configs"
-	"github.com/beiai0xff/turl/test"
+	"github.com/beiai0xff/turl/internal/tests"
 )
 
 func TestProxySet(t *testing.T) {
 	c := configs.CacheConfig{
 		LocalCacheSize: 10,
 		LocalCacheTTL:  time.Minute,
-		RedisConfig:    &configs.RedisConfig{Addr: test.RedisAddr, DialTimeout: time.Second},
+		RedisConfig:    &configs.RedisConfig{Addr: tests.RedisAddr, DialTimeout: time.Second},
 	}
 	p, err := NewProxy(&c)
 	require.NoError(t, err)
@@ -29,7 +29,7 @@ func TestProxyGet(t *testing.T) {
 	c := configs.CacheConfig{
 		LocalCacheSize: 10,
 		LocalCacheTTL:  time.Minute,
-		RedisConfig:    &configs.RedisConfig{Addr: test.RedisAddr, DialTimeout: time.Second},
+		RedisConfig:    &configs.RedisConfig{Addr: tests.RedisAddr, DialTimeout: time.Second},
 	}
 	p, err := newProxy(&c)
 	require.NoError(t, err)
@@ -62,7 +62,7 @@ func TestProxyClose(t *testing.T) {
 	c := configs.CacheConfig{
 		LocalCacheSize: 10,
 		LocalCacheTTL:  time.Minute,
-		RedisConfig:    &configs.RedisConfig{Addr: test.RedisAddr, DialTimeout: time.Second},
+		RedisConfig:    &configs.RedisConfig{Addr: tests.RedisAddr, DialTimeout: time.Second},
 	}
 	p, err := NewProxy(&c)
 	require.NoError(t, err)
