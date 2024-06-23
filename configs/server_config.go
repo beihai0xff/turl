@@ -6,7 +6,7 @@ import (
 
 	"github.com/samber/lo"
 
-	"github.com/beiai0xff/turl/pkg/validate"
+	"github.com/beihai0xff/turl/pkg/validate"
 )
 
 // ServerConfig is the config of turl server

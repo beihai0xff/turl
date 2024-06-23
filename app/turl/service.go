@@ -7,26 +7,35 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/beiai0xff/turl/configs"
-	"github.com/beiai0xff/turl/pkg/cache"
-	"github.com/beiai0xff/turl/pkg/db/mysql"
-	"github.com/beiai0xff/turl/pkg/db/redis"
-	"github.com/beiai0xff/turl/pkg/mapping"
-	"github.com/beiai0xff/turl/pkg/storage"
-	"github.com/beiai0xff/turl/pkg/tddl"
-	"github.com/beiai0xff/turl/pkg/validate"
+	"github.com/beihai0xff/turl/configs"
+	"github.com/beihai0xff/turl/pkg/cache"
+	"github.com/beihai0xff/turl/pkg/db/mysql"
+	"github.com/beihai0xff/turl/pkg/db/redis"
+	"github.com/beihai0xff/turl/pkg/mapping"
+	"github.com/beihai0xff/turl/pkg/storage"
+	"github.com/beihai0xff/turl/pkg/tddl"
+	"github.com/beihai0xff/turl/pkg/validate"
 )
 
-// TinyURL represents the tiny URL service.
-type TinyURL struct {
+// Service represents the tiny URL service interface.
+type Service interface {
+	Create(ctx context.Context, long []byte) ([]byte, error)
+	Retrieve(ctx context.Context, short []byte) ([]byte, error)
+	Close() error
+}
+
+// tinyURLService represents the tiny URL service.
+type tinyURLService struct {
 	c     *configs.ServerConfig
 	db    storage.Storage
 	cache cache.Interface
 	seq   tddl.TDDL
 }
 
-// NewTinyURL creates a new TinyURL service.
-func NewTinyURL(c *configs.ServerConfig) (*TinyURL, error) {
+var _ Service = (*tinyURLService)(nil)
+
+// newTinyURLService creates a new tinyURLService service.
+func newTinyURLService(c *configs.ServerConfig) (*tinyURLService, error) {
 	db, err := mysql.New(c.MySQLConfig)
 	if err != nil {
 		return nil, err
@@ -44,7 +53,7 @@ func NewTinyURL(c *configs.ServerConfig) (*TinyURL, error) {
 
 	rdb := redis.Client(c.CacheConfig.RedisConfig)
 
-	return &TinyURL{
+	return &tinyURLService{
 		c:     c,
 		db:    storage.New(db, rdb),
 		cache: cacheProxy,
@@ -53,7 +62,7 @@ func NewTinyURL(c *configs.ServerConfig) (*TinyURL, error) {
 }
 
 // Create creates a new tiny URL.
-func (t *TinyURL) Create(ctx context.Context, long []byte) ([]byte, error) {
+func (t *tinyURLService) Create(ctx context.Context, long []byte) ([]byte, error) {
 	if err := validate.Instance().VarCtx(ctx, string(long), "required,http_url"); err != nil {
 		return nil, err
 	}
@@ -78,7 +87,7 @@ func (t *TinyURL) Create(ctx context.Context, long []byte) ([]byte, error) {
 }
 
 // Retrieve a tiny URL.
-func (t *TinyURL) Retrieve(ctx context.Context, short []byte) ([]byte, error) {
+func (t *tinyURLService) Retrieve(ctx context.Context, short []byte) ([]byte, error) {
 	// validate short URL
 	seq, err := mapping.Base58Decode(short)
 	if err != nil {
@@ -117,8 +126,8 @@ func (t *TinyURL) Retrieve(ctx context.Context, short []byte) ([]byte, error) {
 	return long, nil
 }
 
-// Close closes the TinyURL service.
-func (t *TinyURL) Close() error {
+// Close closes the tinyURLService service.
+func (t *tinyURLService) Close() error {
 	t.seq.Close()
 
 	if err := t.db.Close(); err != nil {

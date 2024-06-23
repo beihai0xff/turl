@@ -4,7 +4,7 @@ package redis
 import (
 	"github.com/redis/go-redis/v9"
 
-	"github.com/beiai0xff/turl/configs"
+	"github.com/beihai0xff/turl/configs"
 )
 
 // Client returns a redis client

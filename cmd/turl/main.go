@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/beiai0xff/turl/cli"
+	"github.com/beihai0xff/turl/cli"
 )
 
 func main() {

@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
-	"github.com/beiai0xff/turl/configs"
+	"github.com/beihai0xff/turl/configs"
 )
 
 // New create a new gorm db

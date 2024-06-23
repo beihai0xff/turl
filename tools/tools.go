@@ -10,4 +10,4 @@ package tools
 
 //go:generate go install github.com/swaggo/swag/cmd/swag@latest
 //go:generate go install github.com/fatih/gomodifytags@latest
-//go:generate go install go.uber.org/mock/mockgen@latest
+//go:generate go install github.com/vektra/mockery/v2@latest

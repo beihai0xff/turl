@@ -5,8 +5,8 @@ import (
 
 	"gorm.io/gorm/schema"
 
-	"github.com/beiai0xff/turl/configs"
-	"github.com/beiai0xff/turl/pkg/db/mysql"
+	"github.com/beihai0xff/turl/configs"
+	"github.com/beihai0xff/turl/pkg/db/mysql"
 )
 
 func CreateTable(t any) error {

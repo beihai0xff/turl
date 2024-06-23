@@ -6,8 +6,8 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/beiai0xff/turl/api"
-	"github.com/beiai0xff/turl/configs"
+	"github.com/beihai0xff/turl/api"
+	"github.com/beihai0xff/turl/configs"
 )
 
 type serverCLI struct{}

@@ -9,8 +9,8 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	"github.com/beiai0xff/turl/configs"
-	redis2 "github.com/beiai0xff/turl/pkg/db/redis"
+	"github.com/beihai0xff/turl/configs"
+	redis2 "github.com/beihai0xff/turl/pkg/db/redis"
 )
 
 var _ Interface = (*redisCache)(nil)
