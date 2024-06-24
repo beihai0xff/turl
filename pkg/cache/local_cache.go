@@ -1,4 +1,3 @@
-// Package lcahce provides the local cache
 package cache
 
 import (
@@ -7,6 +6,8 @@ import (
 	"time"
 
 	"github.com/allegro/bigcache/v3"
+
+	"github.com/beihai0xff/turl/configs"
 )
 
 var (
@@ -21,24 +22,25 @@ type localCache struct {
 // NewLocalCache create a local cache
 // capacity is the cache capacity
 // ttl is the time to live
-func NewLocalCache(capacity int, ttl time.Duration) (Interface, error) {
-	return newLocalCache(capacity, ttl)
+func NewLocalCache(c *configs.LocalCacheConfig) (Interface, error) {
+	return newLocalCache(c)
 }
 
-func newLocalCache(capacity int, ttl time.Duration) (*localCache, error) {
-	if capacity <= 0 {
+func newLocalCache(c *configs.LocalCacheConfig) (*localCache, error) {
+	if c.Capacity <= 0 {
 		return nil, errInvalidCap
 	}
 
-	config := bigcache.DefaultConfig(ttl)
-	config.MaxEntriesInWindow = capacity
+	config := bigcache.DefaultConfig(c.TTL)
+	config.MaxEntriesInWindow = c.Capacity
+	config.HardMaxCacheSize = c.MaxMemory
 
-	c, err := bigcache.New(context.Background(), config)
+	b, err := bigcache.New(context.Background(), config)
 	if err != nil {
 		return nil, err
 	}
 
-	return &localCache{cache: c}, err
+	return &localCache{cache: b}, err
 }
 
 // Set the k v pair to the cache

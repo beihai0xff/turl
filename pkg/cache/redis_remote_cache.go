@@ -1,10 +1,11 @@
-// Package dcache implements a distributed cache Interface
-// redis.go implements a distributed cache with redis
+// Package cache implements a distributed cache Interface
+// redis_remote_cache.go implements a distributed cache with redis
 package cache
 
 import (
 	"context"
 	"errors"
+	"math/rand/v2"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -33,6 +34,8 @@ func newRedisCache(c *configs.RedisConfig) *redisCache {
 
 // Set the k v pair to the cache
 func (c *redisCache) Set(ctx context.Context, k string, v []byte, ttl time.Duration) error {
+	//nolint:gosec,mnd
+	ttl += time.Duration(rand.IntN(int(ttl / 10))) // add some jitter
 	return c.rdb.SetEx(ctx, k, v, ttl).Err()
 }
 
