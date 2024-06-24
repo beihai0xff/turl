@@ -27,7 +27,7 @@ func NewProxy(c *configs.CacheConfig) (Interface, error) {
 }
 
 func newProxy(c *configs.CacheConfig) (*proxy, error) {
-	lc, err := NewLocalCache(c.LocalCacheSize, c.LocalCacheTTL)
+	lc, err := NewLocalCache(c.LocalCacheConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -35,6 +35,8 @@ func newProxy(c *configs.CacheConfig) (*proxy, error) {
 	return &proxy{
 		distributedCache: NewRedisRemoteCache(c.RedisConfig),
 		localCache:       lc,
+		remoteCacheTTL:   c.RemoteCacheTTL,
+		localCacheTTL:    c.LocalCacheConfig.TTL,
 	}, nil
 }
 
@@ -63,7 +65,7 @@ func (p *proxy) Get(ctx context.Context, k string) ([]byte, error) {
 
 	defer func() { // try to set local cache if get from distributed cache
 		if len(long) > 0 {
-			if err = p.localCache.Set(ctx, k, long, p.remoteCacheTTL); err != nil {
+			if err = p.localCache.Set(ctx, k, long, p.localCacheTTL); err != nil {
 				slog.ErrorContext(ctx, "failed to set local cache", slog.Any("error", err))
 			}
 		}

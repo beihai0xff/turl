@@ -7,17 +7,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/beihai0xff/turl/configs"
 	"github.com/beihai0xff/turl/internal/tests"
 )
 
 func TestProxySet(t *testing.T) {
-	c := configs.CacheConfig{
-		LocalCacheSize: 10,
-		LocalCacheTTL:  time.Minute,
-		RedisConfig:    &configs.RedisConfig{Addr: tests.RedisAddr, DialTimeout: time.Second},
-	}
-	p, err := NewProxy(&c)
+	p, err := NewProxy(tests.GlobalConfig.CacheConfig)
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -26,12 +20,7 @@ func TestProxySet(t *testing.T) {
 }
 
 func TestProxyGet(t *testing.T) {
-	c := configs.CacheConfig{
-		LocalCacheSize: 10,
-		LocalCacheTTL:  time.Minute,
-		RedisConfig:    &configs.RedisConfig{Addr: tests.RedisAddr, DialTimeout: time.Second},
-	}
-	p, err := newProxy(&c)
+	p, err := newProxy(tests.GlobalConfig.CacheConfig)
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -59,12 +48,7 @@ func TestProxyGet(t *testing.T) {
 }
 
 func TestProxyClose(t *testing.T) {
-	c := configs.CacheConfig{
-		LocalCacheSize: 10,
-		LocalCacheTTL:  time.Minute,
-		RedisConfig:    &configs.RedisConfig{Addr: tests.RedisAddr, DialTimeout: time.Second},
-	}
-	p, err := NewProxy(&c)
+	p, err := newProxy(tests.GlobalConfig.CacheConfig)
 	require.NoError(t, err)
 
 	require.NoError(t, p.Close())

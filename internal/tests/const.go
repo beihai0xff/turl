@@ -24,11 +24,15 @@ var GlobalConfig = &configs.ServerConfig{
 		DSN: DSN,
 	},
 	CacheConfig: &configs.CacheConfig{
-		LocalCacheSize: 10,
-		LocalCacheTTL:  10,
 		RedisConfig: &configs.RedisConfig{
 			Addr:        RedisAddr,
 			DialTimeout: time.Second,
+		},
+		RemoteCacheTTL: 10 * time.Minute,
+		LocalCacheConfig: &configs.LocalCacheConfig{
+			TTL:       10 * time.Minute,
+			Capacity:  1e8,
+			MaxMemory: 512,
 		},
 	},
 }

@@ -7,22 +7,21 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/beihai0xff/turl/configs"
 	"github.com/beihai0xff/turl/internal/tests"
 )
 
 func TestNewRedisCache(t *testing.T) {
-	got := NewRedisRemoteCache(&configs.RedisConfig{Addr: tests.RedisAddr, DialTimeout: time.Second})
+	got := NewRedisRemoteCache(tests.GlobalConfig.CacheConfig.RedisConfig)
 	require.NotNil(t, got)
 }
 
 func Test_newRedisCache(t *testing.T) {
-	got := NewRedisRemoteCache(&configs.RedisConfig{Addr: tests.RedisAddr, DialTimeout: time.Second})
+	got := NewRedisRemoteCache(tests.GlobalConfig.CacheConfig.RedisConfig)
 	require.NotNil(t, got)
 }
 
 func Test_redisCache_Set(t *testing.T) {
-	c := newRedisCache(&configs.RedisConfig{Addr: tests.RedisAddr, DialTimeout: time.Second})
+	c := newRedisCache(tests.GlobalConfig.CacheConfig.RedisConfig)
 	t.Cleanup(
 		func() {
 			c.Close()
@@ -34,7 +33,7 @@ func Test_redisCache_Set(t *testing.T) {
 }
 
 func Test_redisCache_Get(t *testing.T) {
-	c := newRedisCache(&configs.RedisConfig{Addr: tests.RedisAddr, DialTimeout: time.Second})
+	c := newRedisCache(tests.GlobalConfig.CacheConfig.RedisConfig)
 	t.Cleanup(
 		func() {
 			c.Close()
