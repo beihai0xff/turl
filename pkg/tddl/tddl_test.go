@@ -12,9 +12,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
-	"github.com/beiai0xff/turl/configs"
-	"github.com/beiai0xff/turl/internal/tests"
-	"github.com/beiai0xff/turl/pkg/db/mysql"
+	"github.com/beihai0xff/turl/configs"
+	"github.com/beihai0xff/turl/internal/tests"
+	"github.com/beihai0xff/turl/pkg/db/mysql"
 )
 
 const (

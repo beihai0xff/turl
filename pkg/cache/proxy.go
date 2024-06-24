@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/beiai0xff/turl/configs"
+	"github.com/beihai0xff/turl/configs"
 )
 
 type proxy struct {

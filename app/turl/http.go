@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/beiai0xff/turl/configs"
+	"github.com/beihai0xff/turl/configs"
 )
 
 // NewServer creates a new HTTP server.

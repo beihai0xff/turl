@@ -4,9 +4,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/beiai0xff/turl/internal/tests"
-	"github.com/beiai0xff/turl/pkg/storage"
-	"github.com/beiai0xff/turl/pkg/tddl"
+	"github.com/beihai0xff/turl/internal/tests"
+	"github.com/beihai0xff/turl/pkg/storage"
+	"github.com/beihai0xff/turl/pkg/tddl"
 )
 
 func TestMain(m *testing.M) {

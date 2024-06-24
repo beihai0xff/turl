@@ -6,22 +6,22 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/beiai0xff/turl/configs"
-	"github.com/beiai0xff/turl/pkg/mapping"
+	"github.com/beihai0xff/turl/configs"
+	"github.com/beihai0xff/turl/pkg/mapping"
 )
 
 type handler struct {
-	t *TinyURL
+	s Service
 }
 
 func newHandler(c *configs.ServerConfig) (*handler, error) {
-	t, err := NewTinyURL(c)
+	s, err := newTinyURLService(c)
 	if err != nil {
 		return nil, err
 	}
 
 	return &handler{
-		t: t,
+		s: s,
 	}, nil
 }
 
@@ -30,18 +30,18 @@ func (h *handler) Create(c *gin.Context) {
 	var req ShortenRequest
 
 	if c.ShouldBind(&req) != nil {
-		c.JSON(http.StatusBadRequest, &ShortenResponse{LongURL: req.LongURL,
+		c.JSON(http.StatusBadRequest, &ShortenResponse{LongURL: []byte(req.LongURL),
 			Error: "invalid request param 'long_url'"})
 		return
 	}
 
-	short, err := h.t.Create(c, req.LongURL)
+	short, err := h.s.Create(c, []byte(req.LongURL))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, &ShortenResponse{Error: err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, &ShortenResponse{ShortURL: short, LongURL: req.LongURL})
+	c.JSON(http.StatusOK, &ShortenResponse{ShortURL: short, LongURL: []byte(req.LongURL)})
 }
 
 // Redirect redirects the short URL to the original long URL temporarily if the short URL exists.
@@ -52,7 +52,7 @@ func (h *handler) Redirect(c *gin.Context) {
 		return
 	}
 
-	long, err := h.t.Retrieve(c, short)
+	long, err := h.s.Retrieve(c, short)
 	if err != nil {
 		if errors.Is(err, mapping.ErrInvalidInput) {
 			c.JSON(http.StatusBadRequest, &ShortenResponse{ShortURL: short, Error: "invalid short URL"})

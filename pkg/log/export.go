@@ -6,7 +6,7 @@ import (
 	"io"
 	"log/slog"
 
-	"github.com/beiai0xff/turl/configs"
+	"github.com/beihai0xff/turl/configs"
 )
 
 // SetDefaultLogger new a slog log, default callerSkip is 1

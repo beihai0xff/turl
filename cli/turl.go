@@ -9,7 +9,7 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/urfave/cli/v2"
 
-	"github.com/beiai0xff/turl/api"
+	"github.com/beihai0xff/turl/api"
 )
 
 const (

@@ -1,0 +1,26 @@
+quiet: False
+with-expecter: True
+mockname: "{{.Mock}}{{.InterfaceName}}"
+filename: "{{.MockName}}.go"
+dir: internal/tests/mocks/
+outpkg: mocks
+packages:
+  github.com/beihai0xff/turl/app/turl:
+    interfaces:
+      # select the interfaces you want mocked
+      Service:
+        # Modify package-level config for this specific interface (if applicable)
+        config:
+          mockname: "MockTURLService"
+
+  github.com/beihai0xff/turl/pkg/cache:
+    interfaces:
+      Interface:
+        config:
+          mockname: "MockCache"
+  github.com/beihai0xff/turl/pkg/storage:
+    interfaces:
+      Storage:
+  github.com/beihai0xff/turl/pkg/tddl:
+    interfaces:
+      TDDL:

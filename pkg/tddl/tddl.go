@@ -13,8 +13,8 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/plugin/optimisticlock"
 
-	"github.com/beiai0xff/turl/configs"
-	"github.com/beiai0xff/turl/pkg/workqueue"
+	"github.com/beihai0xff/turl/configs"
+	"github.com/beihai0xff/turl/pkg/workqueue"
 )
 
 const (

@@ -7,8 +7,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/beiai0xff/turl/configs"
-	"github.com/beiai0xff/turl/internal/tests"
+	"github.com/beihai0xff/turl/configs"
+	"github.com/beihai0xff/turl/internal/tests"
 )
 
 func TestNewRedisCache(t *testing.T) {

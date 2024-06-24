@@ -8,12 +8,12 @@ import (
 
 func TestShortenRequest(t *testing.T) {
 	t.Run("ValidURL", func(t *testing.T) {
-		req := ShortenRequest{LongURL: []byte("https://www.example.com")}
+		req := ShortenRequest{LongURL: "https://www.example.com"}
 		assert.NotNil(t, req)
 	})
 
 	t.Run("InvalidURL", func(t *testing.T) {
-		req := ShortenRequest{LongURL: []byte("invalid_url")}
+		req := ShortenRequest{LongURL: "invalid_url"}
 		assert.NotNil(t, req)
 	})
 }
