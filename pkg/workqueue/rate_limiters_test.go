@@ -3,7 +3,31 @@ package workqueue
 import (
 	"testing"
 	"time"
+
+	"golang.org/x/time/rate"
 )
+
+func TestBucketRateLimiter(t *testing.T) {
+	limiter := NewBucketRateLimiter[any](rate.NewLimiter(rate.Limit(1), 1))
+
+	if e, a := 0*time.Second, limiter.When("one"); e != a {
+		t.Errorf("expected %v, got %v", e, a)
+	}
+
+	if limiter.Take("one") {
+		t.Errorf("expected false, got true")
+	}
+
+	if e, a := 0, limiter.Retries("one"); e != a {
+		t.Errorf("expected %v, got %v", e, a)
+	}
+
+	limiter.Forget("one")
+	if e, a := 0, limiter.Retries("one"); e != a {
+		t.Errorf("expected %v, got %v", e, a)
+	}
+
+}
 
 func TestItemExponentialFailureRateLimiter(t *testing.T) {
 	limiter := NewItemExponentialFailureRateLimiter[any](1*time.Millisecond, 1*time.Second)
@@ -25,6 +49,13 @@ func TestItemExponentialFailureRateLimiter(t *testing.T) {
 	}
 	if e, a := 5, limiter.Retries("one"); e != a {
 		t.Errorf("expected %v, got %v", e, a)
+	}
+
+	if limiter.Take("one") {
+		t.Errorf("expected false, got true")
+	}
+	if !limiter.Take("two") {
+		t.Errorf("expected true, got false")
 	}
 
 	if e, a := 1*time.Millisecond, limiter.When("two"); e != a {
@@ -102,6 +133,13 @@ func TestItemFastSlowRateLimiter(t *testing.T) {
 		t.Errorf("expected %v, got %v", e, a)
 	}
 
+	if limiter.Take("one") {
+		t.Errorf("expected false, got true")
+	}
+	if !limiter.Take("two") {
+		t.Errorf("expected true, got false")
+	}
+
 	if e, a := 5*time.Millisecond, limiter.When("two"); e != a {
 		t.Errorf("expected %v, got %v", e, a)
 	}
@@ -145,6 +183,13 @@ func TestMaxOfRateLimiter(t *testing.T) {
 	}
 	if e, a := 5, limiter.Retries("one"); e != a {
 		t.Errorf("expected %v, got %v", e, a)
+	}
+
+	if limiter.Take("one") {
+		t.Errorf("expected false, got true")
+	}
+	if !limiter.Take("two") {
+		t.Errorf("expected true, got false")
 	}
 
 	if e, a := 5*time.Millisecond, limiter.When("two"); e != a {

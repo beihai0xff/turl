@@ -5,28 +5,40 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+
+	"github.com/beihai0xff/turl/app/turl"
 )
 
 // OptionFunc is a function that can be used to configure a graceful shutdown.
 type OptionFunc func(ctx context.Context) error
+
+// HandlerShutdown shutdown the handler.
+func HandlerShutdown(handler *turl.Handler) OptionFunc {
+	return func(_ context.Context) error {
+		if err := handler.Close(); err != nil {
+			slog.Error("failed to shutdown handler", slog.Any("Error", err))
+			return err
+		}
+
+		slog.Info("handler stopped")
+
+		return nil
+	}
+}
 
 // HTTPServerShutdown shutdown the HTTP server.
 func HTTPServerShutdown(httpServer *http.Server) OptionFunc {
 	return func(ctx context.Context) error {
 		if err := httpServer.Shutdown(ctx); err != nil {
 			slog.Error("failed to shutdown HTTP server",
-				slog.Group("Server Shutdown",
-					slog.String("HTTP Server Address", httpServer.Addr),
-					slog.String("Error", err.Error()),
-				),
+				slog.String("Address", httpServer.Addr),
+				slog.Any("Error", err),
 			)
 
 			return err
 		}
 
-		slog.Info("HTTP server stopped", slog.Group("Server Shutdown",
-			slog.String("HTTP Server Address", httpServer.Addr),
-		))
+		slog.Info("HTTP server stopped", slog.String("Address", httpServer.Addr))
 
 		return nil
 	}

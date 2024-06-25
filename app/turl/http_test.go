@@ -9,7 +9,9 @@ import (
 )
 
 func TestNewServer(t *testing.T) {
-	got, err := NewServer(tests.GlobalConfig)
+	h, err := NewHandler(tests.GlobalConfig)
+	require.NoError(t, err)
+	got, err := NewServer(h, tests.GlobalConfig)
 	require.NoError(t, err)
 	require.NotNil(t, got)
 }

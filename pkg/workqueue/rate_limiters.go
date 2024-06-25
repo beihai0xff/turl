@@ -12,10 +12,20 @@ import (
 	"golang.org/x/time/rate"
 )
 
+// const (
+// 	tokenFormat     = "{%s}.tokens"
+// 	timestampFormat = "{%s}.ts"
+// 	pingInterval    = time.Millisecond * 100
+// )
+
 // RateLimiter is an interface that knows how to limit the rate at which something is processed
 // It provides methods to decide how long an item should wait, to stop tracking an item, and to get the number of failures an item has had.
 type RateLimiter[T comparable] interface {
-	// When gets an item and gets to decide how long that item should wait
+	// Take gets an item and gets to decide whether it should run now or not,
+	// use this method if you intend to drop / skip events that exceed the rate.
+	Take(item T) bool
+	// When gets an item and gets to decide how long that item should wait,
+	// use this method if you wish to wait and slow down in accordance with the rate limit without dropping events.
 	When(item T) time.Duration
 	// Forget indicates that an item is finished being retried. Doesn't matter whether it's for failing
 	// or for success, we'll stop tracking it
@@ -34,6 +44,11 @@ var _ RateLimiter[any] = &BucketRateLimiter[any]{}
 // NewBucketRateLimiter creates a new BucketRateLimiter
 func NewBucketRateLimiter[T comparable](l *rate.Limiter) RateLimiter[T] {
 	return &BucketRateLimiter[T]{Limiter: l}
+}
+
+// Take gets an item and gets to decide whether it should run now or not,
+func (r *BucketRateLimiter[T]) Take(_ T) bool {
+	return r.Limiter.Allow()
 }
 
 // When returns the delay for a reservation for a token from the bucket.
@@ -71,6 +86,16 @@ func NewItemExponentialFailureRateLimiter[T comparable](baseDelay time.Duration,
 	}
 }
 
+// Take gets an item and gets to decide whether it should run now or not,
+func (r *ItemExponentialFailureRateLimiter[T]) Take(item T) bool {
+	r.failuresLock.Lock()
+	defer r.failuresLock.Unlock()
+
+	_, ok := r.failures[item]
+
+	return !ok
+}
+
 // When calculates the delay for an item based on the exponential backoff algorithm.
 func (r *ItemExponentialFailureRateLimiter[T]) When(item T) time.Duration {
 	r.failuresLock.Lock()
@@ -80,7 +105,7 @@ func (r *ItemExponentialFailureRateLimiter[T]) When(item T) time.Duration {
 	r.failures[item]++
 
 	// The backoff is capped such that 'calculated' value never overflows.
-	backoff := float64(r.baseDelay.Nanoseconds()) * math.Pow(2, float64(exp)) //nolint: mnd
+	backoff := float64(r.baseDelay.Nanoseconds()) * math.Pow(2, float64(exp)) // nolint: mnd
 	if backoff > math.MaxInt64 {
 		return r.maxDelay
 	}
@@ -131,6 +156,16 @@ func NewItemFastSlowRateLimiter[T comparable](fastDelay, slowDelay time.Duration
 	}
 }
 
+// Take gets an item and gets to decide whether it should run now or not,
+func (r *ItemFastSlowRateLimiter[T]) Take(item T) bool {
+	r.failuresLock.Lock()
+	defer r.failuresLock.Unlock()
+
+	_, ok := r.failures[item]
+
+	return !ok
+}
+
 // When calculates the delay for an item based on whether it has exceeded the maximum number of fast attempts.
 func (r *ItemFastSlowRateLimiter[T]) When(item T) time.Duration {
 	r.failuresLock.Lock()
@@ -162,7 +197,7 @@ func (r *ItemFastSlowRateLimiter[T]) Forget(item T) {
 }
 
 // MaxOfRateLimiter calls every RateLimiter and returns the worst case response
-// When used with a token bucket limiter, the burst could be apparently exceeded in cases where particular items
+// When used with a token bucket limiter, the capacity could be apparently exceeded in cases where particular items
 // were separately delayed a longer time.
 type MaxOfRateLimiter[T comparable] struct {
 	limiters []RateLimiter[T]
@@ -173,6 +208,17 @@ var _ RateLimiter[any] = &MaxOfRateLimiter[any]{}
 // NewMaxOfRateLimiter creates a new MaxOfRateLimiter with the specified limiters.
 func NewMaxOfRateLimiter[T comparable](limiters ...RateLimiter[T]) RateLimiter[T] {
 	return &MaxOfRateLimiter[T]{limiters: limiters}
+}
+
+// Take gets an item and gets to decide whether it should run now or not,
+func (r *MaxOfRateLimiter[T]) Take(item T) bool {
+	for _, limiter := range r.limiters {
+		if !limiter.Take(item) {
+			return false
+		}
+	}
+
+	return true
 }
 
 // When calculates the maximum delay among all the limiters for an item.

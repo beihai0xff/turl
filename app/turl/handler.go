@@ -10,23 +10,25 @@ import (
 	"github.com/beihai0xff/turl/pkg/mapping"
 )
 
-type handler struct {
+// Handler represents the request handler.
+type Handler struct {
 	s Service
 }
 
-func newHandler(c *configs.ServerConfig) (*handler, error) {
+// NewHandler creates a new Handler.
+func NewHandler(c *configs.ServerConfig) (*Handler, error) {
 	s, err := newTinyURLService(c)
 	if err != nil {
 		return nil, err
 	}
 
-	return &handler{
+	return &Handler{
 		s: s,
 	}, nil
 }
 
 // Create creates a new short URL from the long URL.
-func (h *handler) Create(c *gin.Context) {
+func (h *Handler) Create(c *gin.Context) {
 	var req ShortenRequest
 
 	if c.ShouldBind(&req) != nil {
@@ -45,7 +47,7 @@ func (h *handler) Create(c *gin.Context) {
 }
 
 // Redirect redirects the short URL to the original long URL temporarily if the short URL exists.
-func (h *handler) Redirect(c *gin.Context) {
+func (h *Handler) Redirect(c *gin.Context) {
 	short := []byte(c.Param("short"))
 	if len(short) > 8 || len(short) < 6 {
 		c.JSON(http.StatusBadRequest, &ShortenResponse{ShortURL: short, Error: "invalid short URL"})
@@ -63,4 +65,9 @@ func (h *handler) Redirect(c *gin.Context) {
 	}
 
 	c.Redirect(http.StatusFound, string(long))
+}
+
+// Close closes the handler.
+func (h *Handler) Close() error {
+	return h.s.Close()
 }

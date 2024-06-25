@@ -13,15 +13,16 @@ func getWriters(c *configs.LogConfig) io.Writer {
 	var writers []io.Writer
 
 	for _, writer := range c.Writers {
-		if writer == configs.OutputConsole {
-			writers = append(writers, getConsoleWriter())
-		}
-
-		if writer == configs.OutputFile {
+		switch writer {
+		case configs.OutputFile:
 			writer, _ := getFileWriter(&c.FileConfig)
-			// TODO: add cleanFunc to cleanFuncs
+			// TODO: add cleanFunc to close file writer
 			// cleanFuncs = append(cleanFuncs, cleanFunc)
 			writers = append(writers, writer)
+		case configs.OutputConsole:
+			writers = append(writers, getConsoleWriter())
+		default:
+			writers = append(writers, getConsoleWriter())
 		}
 	}
 
@@ -36,7 +37,7 @@ func getConsoleWriter() io.Writer {
 // getFileWriter write log to file
 func getFileWriter(c *configs.FileConfig) (io.Writer, func()) {
 	writer := lumberjack.Logger{
-		// It uses <processname>-lumberjack.log in os.TempDir() if empty.
+		// It uses <processname>-lumberjack.log in os.TempDir() if Filename is empty.
 		Filename:   c.Filepath,
 		MaxSize:    c.MaxSize,
 		MaxAge:     c.MaxAge,

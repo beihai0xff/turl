@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 
 	"github.com/beihai0xff/turl/internal/tests"
 	"github.com/beihai0xff/turl/internal/tests/mocks"
@@ -37,14 +38,17 @@ func TestTinyURL_Retrieve(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("RetrieveExistingURL", func(t *testing.T) {
-		short, _ := turl.Create(context.Background(), []byte("https://www.example.com"))
-		_, err := turl.Retrieve(context.Background(), short)
+		short, err := turl.Create(context.Background(), []byte("https://www.example.com"))
 		require.NoError(t, err)
+		got, err := turl.Retrieve(context.Background(), short)
+		require.NoError(t, err)
+		require.Equal(t, []byte("https://www.example.com"), got)
 	})
 
 	t.Run("RetrieveNonExistingURL", func(t *testing.T) {
-		_, err := turl.Retrieve(context.Background(), []byte("non_existing_url"))
-		require.Error(t, err)
+		got, err := turl.Retrieve(context.Background(), []byte("zzzzzz"))
+		require.ErrorIs(t, err, gorm.ErrRecordNotFound)
+		require.Nil(t, got)
 	})
 }
 
@@ -53,7 +57,7 @@ func TestTinyURL_Close(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("CloseService", func(t *testing.T) {
-		err := turl.Close()
+		err = turl.Close()
 		require.NoError(t, err)
 	})
 }

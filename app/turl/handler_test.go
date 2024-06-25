@@ -18,7 +18,7 @@ import (
 
 func TestHandler_Create(t *testing.T) {
 	mockService := mocks.NewMockTURLService(t)
-	h := &handler{s: mockService}
+	h := &Handler{s: mockService}
 
 	router := gin.Default()
 	router.POST("/create", h.Create)
@@ -58,7 +58,7 @@ func TestHandler_Create(t *testing.T) {
 
 func TestHandler_Redirect(t *testing.T) {
 	mockService := mocks.NewMockTURLService(t)
-	h := &handler{s: mockService}
+	h := &Handler{s: mockService}
 
 	router := gin.Default()
 	router.GET("/redirect/:short", h.Redirect)
