@@ -14,6 +14,7 @@ import (
 	"github.com/beihai0xff/turl/pkg/cache"
 	"github.com/beihai0xff/turl/pkg/mapping"
 	"github.com/beihai0xff/turl/pkg/storage"
+	"github.com/beihai0xff/turl/pkg/tddl"
 )
 
 func TestTinyURL_Create(t *testing.T) {
@@ -34,6 +35,9 @@ func TestTinyURL_Create(t *testing.T) {
 }
 
 func TestTinyURL_Retrieve(t *testing.T) {
+	require.NoError(t, tests.CreateTable(tddl.Sequence{}))
+	require.NoError(t, tests.CreateTable(storage.TinyURL{}))
+
 	turl, err := newTinyURLService(tests.GlobalConfig)
 	require.NoError(t, err)
 
