@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 	tests.CreateTable(&Sequence{})
 
 	code := m.Run()
-	tests.DropTDDLTable(&Sequence{})
+	tests.DropTable(&Sequence{})
 
 	os.Exit(code)
 }

@@ -40,12 +40,12 @@ const (
 // LogConfig log output: console file remote
 type LogConfig struct {
 	// Writers log output(OutputConsole, OutputFile)
-	Writers []string `yaml:"writers" mapstructure:"writers" json:"writers"`
+	Writers []string `validate:"required,min=1" yaml:"writers" mapstructure:"writers" json:"writers"`
 	// FileConfig log file config, if writers has file, must set file config
 	FileConfig FileConfig `yaml:"file_config" mapstructure:"file_config" json:"file_config"`
 
 	// Format log format type (console, json)
-	Format string `yaml:"format" mapstructure:"format" json:"format"`
+	Format string `validate:"required" yaml:"format" mapstructure:"format" json:"format"`
 	// AddSource add source file and line
 	AddSource bool `json:"add_source" yaml:"add_source" mapstructure:"add_source"`
 	// Level log level debug info error...

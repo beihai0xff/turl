@@ -7,7 +7,7 @@ GIT_TAG					:= "${RC_ID}.${COMMIT_NUM}.git.${COMMIT_ID}"
 
 BUILD_TIME				:= $(shell git show -s --format=%cd)
 # fill the ldflags with the build info
-ldflags					=  "-w -X "
+ldflags					=  "-w -X
 BUILD_PLATFORMS 		=  linux/amd64,linux/arm64
 GO_VERSION 				=  1.22-bookworm
 ARCH					=  $(shell uname -m)
@@ -51,9 +51,7 @@ build: clean
 
 # build binary file
 build/binary: clean bootstrap
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags=$(ldflags) -o ./build/dist/binary/x86_64/turl cmd/turl/main.go
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags=$(ldflags) -o ./build/dist/binary/aarch64/turl cmd/turl/main.go
-
+	go build -tags=jsoniter -ldflags=$(ldflags) -o ./build/dist/binary/turl cmd/turl/main.go
 
 # docker: enable containerd for pulling and storing images
 build/docker:

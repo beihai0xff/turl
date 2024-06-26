@@ -16,10 +16,12 @@ func TestMain(m *testing.M) {
 	if err := tests.CreateTable(storage.TinyURL{}); err != nil {
 		panic(err)
 	}
+
+	exitCode := m.Run()
 	defer func() {
-		tests.DropTDDLTable(tddl.Sequence{})
-		tests.DropTDDLTable(storage.TinyURL{})
+		tests.DropTable(tddl.Sequence{})
+		tests.DropTable(storage.TinyURL{})
 	}()
 
-	os.Exit(m.Run())
+	os.Exit(exitCode)
 }

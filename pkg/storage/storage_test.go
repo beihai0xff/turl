@@ -19,7 +19,7 @@ func TestMain(m *testing.M) {
 	tests.CreateTable(&TinyURL{})
 
 	code := m.Run()
-	tests.DropTDDLTable(&TinyURL{})
+	tests.DropTable(&TinyURL{})
 
 	os.Exit(code)
 }

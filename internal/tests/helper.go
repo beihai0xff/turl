@@ -18,7 +18,7 @@ func CreateTable(t any) error {
 	return db.AutoMigrate(&t)
 }
 
-func DropTDDLTable(t schema.Tabler) error {
+func DropTable(t schema.Tabler) error {
 	db, err := mysql.New(&configs.MySQLConfig{DSN: DSN})
 	if err != nil {
 		return err
