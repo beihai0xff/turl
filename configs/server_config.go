@@ -37,7 +37,7 @@ type ServerConfig struct {
 	// MySQLConfig is the mysql config of turl server
 	MySQLConfig *MySQLConfig `json:"mysql" yaml:"mysql" mapstructure:"mysql"`
 	// CacheConfig is the cache config of turl server
-	CacheConfig *CacheConfig `json:"redis" yaml:"redis" mapstructure:"redis"`
+	CacheConfig *CacheConfig `json:"cache" yaml:"cache" mapstructure:"cache"`
 }
 
 var (
