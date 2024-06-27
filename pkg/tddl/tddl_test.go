@@ -22,10 +22,10 @@ const (
 )
 
 func TestMain(m *testing.M) {
-	tests.CreateTable(&Sequence{})
+	_ = tests.CreateTable(&Sequence{})
 
 	code := m.Run()
-	tests.DropTable(&Sequence{})
+	_ = tests.DropTable(&Sequence{})
 
 	os.Exit(code)
 }
@@ -39,10 +39,6 @@ func newMockDB(t *testing.T) *gorm.DB {
 
 func TestNewSequence_Interface(t *testing.T) {
 	gormDB := newMockDB(t)
-	t.Cleanup(func() {
-		gormDB.Exec("DELETE FROM sequences")
-	})
-
 	_, err := New(gormDB, &configs.TDDLConfig{
 		Step:     10,
 		SeqName:  testSeqName,
@@ -53,12 +49,7 @@ func TestNewSequence_Interface(t *testing.T) {
 
 func TestNewSequence(t *testing.T) {
 	gormDB := newMockDB(t)
-	gormDB.Exec("DROP TABLE sequences")
-	gormDB.AutoMigrate(&Sequence{})
-
-	t.Cleanup(func() {
-		gormDB.Exec("DELETE FROM sequences")
-	})
+	require.NoError(t, gormDB.Exec("DELETE FROM sequences").Error)
 
 	s, err := newSequence(gormDB, &configs.TDDLConfig{
 		Step:     100,
@@ -68,8 +59,8 @@ func TestNewSequence(t *testing.T) {
 	require.NoError(t, err)
 	t.Cleanup(s.Close)
 
-	require.Equal(t, uint64(100), s.step)
-	require.Equal(t, uint(1), s.rowID)
+	require.Equal(t, 100, int(s.step))
+	require.Greater(t, int(s.rowID), 1)
 	require.Equal(t, uint64(10100), s.max)
 	require.Equal(t, uint64(10000), s.curr.Load())
 	next, err := s.Next(context.Background())
@@ -78,9 +69,7 @@ func TestNewSequence(t *testing.T) {
 }
 func Test_tddlSequence_createRecord(t *testing.T) {
 	gormDB := newMockDB(t)
-	t.Cleanup(func() {
-		gormDB.Exec("DELETE FROM sequences")
-	})
+	require.NoError(t, gormDB.Exec("DELETE FROM sequences").Error)
 
 	s := tddlSequence{conn: gormDB}
 	_, err := s.createRecord(testSeqName, 10000)
@@ -93,9 +82,7 @@ func Test_tddlSequence_createRecord(t *testing.T) {
 
 func Test_tddlSequence_getRowID(t *testing.T) {
 	gormDB := newMockDB(t)
-	t.Cleanup(func() {
-		gormDB.Exec("DELETE FROM sequences")
-	})
+	require.NoError(t, gormDB.Exec("DELETE FROM sequences").Error)
 
 	s := tddlSequence{conn: gormDB}
 	require.NoError(t, s.getRowID(testSeqName, 10000))
@@ -108,9 +95,7 @@ func Test_tddlSequence_getRowID(t *testing.T) {
 
 func Test_tddlSequence_Next(t *testing.T) {
 	gormDB := newMockDB(t)
-	t.Cleanup(func() {
-		gormDB.Exec("DELETE FROM sequences")
-	})
+	require.NoError(t, gormDB.Exec("DELETE FROM sequences").Error)
 
 	s, err := newSequence(gormDB, &configs.TDDLConfig{
 		Step:     1000,
@@ -158,9 +143,7 @@ func Test_tddlSequence_Next(t *testing.T) {
 
 func Test_tddlSequence_multi_clients(t *testing.T) {
 	gormDB := newMockDB(t)
-	t.Cleanup(func() {
-		gormDB.Exec("DELETE FROM sequences")
-	})
+	require.NoError(t, gormDB.Exec("DELETE FROM sequences").Error)
 
 	s1, err := newSequence(gormDB, &configs.TDDLConfig{
 		Step:     100,
@@ -224,9 +207,7 @@ func Test_tddlSequence_multi_clients(t *testing.T) {
 
 func Test_tddlSequence_Next_timeout(t *testing.T) {
 	gormDB := newMockDB(t)
-	t.Cleanup(func() {
-		gormDB.Exec("DELETE FROM sequences")
-	})
+	require.NoError(t, gormDB.Exec("DELETE FROM sequences").Error)
 
 	s1, err := newSequence(gormDB, &configs.TDDLConfig{
 		Step:     10,
@@ -257,9 +238,7 @@ func Test_tddlSequence_Next_timeout(t *testing.T) {
 
 func Test_tddlSequence_renew_failed(t *testing.T) {
 	gormDB := newMockDB(t)
-	t.Cleanup(func() {
-		gormDB.Exec("DELETE FROM sequences")
-	})
+	require.NoError(t, gormDB.Exec("DELETE FROM sequences").Error)
 
 	s, err := newSequence(gormDB, &configs.TDDLConfig{
 		Step:     1,
@@ -274,7 +253,7 @@ func Test_tddlSequence_renew_failed(t *testing.T) {
 	go func() {
 		time.Sleep(time.Second)
 		// should retry 7 times
-		require.Equal(t, 7, s.rateLimiter.Retries(s.clientID))
+		require.Equal(t, 7, s.rateLimiter.Retries(context.Background(), s.clientID))
 		s.Close()
 	}()
 
