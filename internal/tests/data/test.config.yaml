@@ -1,0 +1,31 @@
+listen: "localhost"
+port: 8080
+request_timeout: "5s"
+global_rate_limit_key: "turl_rate_limit"
+global_write_rate: 100
+global_write_burst: 200
+stand_alone_read_rate: 100
+stand_alone_read_burst: 200
+log:
+  writers: ["file"]
+  level: "info"
+  format: "text"
+  file:
+    filepath: "/var/log/turl.log"
+    max_size: 100
+    max_age: 7
+    max_backups: 3
+tddl:
+  start_id: 10000
+  step: 1000
+mysql:
+  dsn: "root:test123@tcp(127.0.0.1:3306)/turl?charset=utf8mb4&parseTime=True&loc=Local"
+cache:
+  redis:
+    addr: ["localhost:6379"]
+    dail_timeout: "5s"
+  remote_cache_ttl: 1800s
+  local_cache:
+    ttl: 600s
+    capacity: 1000000
+    max_memory: 512

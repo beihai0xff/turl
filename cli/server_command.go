@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -13,7 +12,6 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/beihai0xff/turl/api"
 	"github.com/beihai0xff/turl/app/turl"
 	"github.com/beihai0xff/turl/configs"
 	"github.com/beihai0xff/turl/pkg/log"
@@ -25,32 +23,10 @@ type serverCLI struct{}
 func (c *serverCLI) getServerStartFlags() []cli.Flag {
 	return []cli.Flag{
 		&cli.StringFlag{
-			Name:  "listen",
-			Usage: "curl HTTP server listen address",
-			Value: "0.0.0.0",
-		},
-		&cli.IntFlag{
-			Name:    "port",
-			Aliases: []string{"p"},
-			Usage:   "turl HTTP server port",
-			Value:   api.DefaultPort,
-			Action: func(_ *cli.Context, v int) error {
-				if v >= 65536 || v < 0 {
-					return fmt.Errorf("flag port value %v out of range[0-65535]", v)
-				}
-				return nil
-			},
-		},
-		&cli.StringSliceFlag{
-			Name:  "log-output",
-			Usage: "Set log output console or file",
-			Value: cli.NewStringSlice(configs.OutputConsole),
-		},
-		&cli.StringFlag{
-			Name:    "logfile",
+			Name:    "file",
 			Aliases: []string{"l"},
-			Usage:   "Set log file path",
-			Value:   "./log/server.log",
+			Usage:   "turl server config file path",
+			Value:   "./turl.yaml",
 		},
 	}
 }
@@ -99,14 +75,18 @@ func (c *serverCLI) serverStart(ctx *cli.Context) error {
 }
 
 func (c *serverCLI) parseServerStartConfig(ctx *cli.Context) (*configs.ServerConfig, error) {
-	conf := configs.ServerConfig{
-		Listen: ctx.String("listen"),
-		Port:   ctx.Int("port"),
+	filePath := ctx.String("file")
+
+	conf, err := configs.ReadFile(filePath)
+	if err != nil {
+		slog.Error("read server config file failed", slog.Any("error", err), slog.Any("file", filePath))
+		return nil, err
 	}
-	if err := conf.Validate(); err != nil {
+
+	if err = conf.Validate(); err != nil {
 		slog.Error("invalid server config", slog.Any("error", err), slog.Any("config", conf))
 		return nil, err
 	}
 
-	return &conf, nil
+	return conf, nil
 }
