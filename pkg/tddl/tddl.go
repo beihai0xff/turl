@@ -153,7 +153,8 @@ func (s *tddlSequence) createRecord(seqName string, startNum uint64) (uint, erro
 // renew function renews the sequence number
 // should be called in a single goroutine
 func (s *tddlSequence) renew() {
-	defer s.rateLimiter.Forget(s.clientID) // forget the retry times
+	ctx := context.Background()
+	defer s.rateLimiter.Forget(ctx, s.clientID) // forget the retry times
 
 	var seq = Sequence{}
 
@@ -178,7 +179,7 @@ func (s *tddlSequence) renew() {
 			slog.Warn("get sequence failed", slog.String("error", res.Error.Error()))
 		}
 
-		time.Sleep(s.rateLimiter.When(s.clientID))
+		time.Sleep(s.rateLimiter.When(ctx, s.clientID))
 	}
 
 	s.curr.Store(seq.Sequence - s.step)
@@ -188,7 +189,7 @@ func (s *tddlSequence) renew() {
 		slog.String("name", seq.Name),
 		slog.Uint64("maxSequence", seq.Sequence),
 		slog.Uint64("currSequence", s.curr.Load()),
-		slog.Int("retryTimes", s.rateLimiter.Retries(s.clientID)),
+		slog.Int("retryTimes", s.rateLimiter.Retries(ctx, s.clientID)),
 	))
 }
 

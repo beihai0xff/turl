@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 
 	"github.com/beihai0xff/turl/configs"
 	"github.com/beihai0xff/turl/pkg/mapping"
@@ -58,6 +59,11 @@ func (h *Handler) Redirect(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, mapping.ErrInvalidInput) {
 			c.JSON(http.StatusBadRequest, &ShortenResponse{ShortURL: short, Error: "invalid short URL"})
+			return
+		}
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, &ShortenResponse{ShortURL: short, Error: "short URL not found"})
 			return
 		}
 

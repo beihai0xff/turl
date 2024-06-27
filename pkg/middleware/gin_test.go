@@ -10,6 +10,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/time/rate"
+
+	"github.com/beihai0xff/turl/pkg/workqueue"
 )
 
 func TestLogger(t *testing.T) {
@@ -81,7 +84,7 @@ func TestRateLimiter(t *testing.T) {
 
 	r := gin.New()
 
-	r.Use(RateLimiter(1, 1))
+	r.Use(RateLimiter(workqueue.NewBucketRateLimiter[any](rate.NewLimiter(1, 1))))
 
 	r.GET("/ping", func(c *gin.Context) {
 		c.String(200, "pong")

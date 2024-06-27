@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"golang.org/x/time/rate"
 
 	"github.com/beihai0xff/turl/pkg/workqueue"
 )
@@ -43,11 +42,9 @@ func Logger() gin.HandlerFunc {
 }
 
 // RateLimiter returns a middleware that limits the number of requests per second.
-func RateLimiter(r, b int) gin.HandlerFunc {
-	limiter := workqueue.NewBucketRateLimiter[any](rate.NewLimiter(rate.Limit(r), b))
-
+func RateLimiter(limiter workqueue.RateLimiter[any]) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if !limiter.Take(c.Request.RemoteAddr) {
+		if !limiter.Take(c, c.Request.RemoteAddr) {
 			c.String(http.StatusTooManyRequests, "rate limit exceeded, retry later")
 		} else {
 			c.Next()

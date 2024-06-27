@@ -79,7 +79,7 @@ func TestHandler_Redirect(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/redirect/abc321", nil)
 		resp := httptest.NewRecorder()
 		router.ServeHTTP(resp, req)
-		require.Equal(t, http.StatusInternalServerError, resp.Code)
+		require.Equal(t, http.StatusNotFound, resp.Code)
 	})
 
 	t.Run("RedirectInvalidURL", func(t *testing.T) {
