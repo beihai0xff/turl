@@ -5,7 +5,7 @@ global_rate_limit_key: "turl_rate_limit"
 global_write_rate: 100
 global_write_burst: 200
 stand_alone_read_rate: 10000
-stand_alone_read_burst: 20000
+stand_alone_read_burst: 500
 log:
   writers: ["console", "file"]
   level: "info"

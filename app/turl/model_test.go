@@ -20,7 +20,7 @@ func TestShortenRequest(t *testing.T) {
 
 func TestShortenResponse(t *testing.T) {
 	t.Run("ValidResponse", func(t *testing.T) {
-		resp := ShortenResponse{ShortURL: []byte("https://turl.com/abc"), LongURL: []byte("https://www.example.com"), Error: ""}
+		resp := ShortenResponse{ShortURL: "https://turl.com/abc", LongURL: "https://www.example.com", Error: ""}
 		require.NotNil(t, resp)
 	})
 
