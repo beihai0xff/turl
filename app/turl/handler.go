@@ -33,7 +33,7 @@ func (h *Handler) Create(c *gin.Context) {
 	var req ShortenRequest
 
 	if c.ShouldBind(&req) != nil {
-		c.JSON(http.StatusBadRequest, &ShortenResponse{LongURL: []byte(req.LongURL),
+		c.JSON(http.StatusBadRequest, &ShortenResponse{LongURL: req.LongURL,
 			Error: "invalid request param 'long_url'"})
 		return
 	}
@@ -44,30 +44,30 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, &ShortenResponse{ShortURL: short, LongURL: []byte(req.LongURL)})
+	c.JSON(http.StatusOK, &ShortenResponse{ShortURL: string(short), LongURL: req.LongURL})
 }
 
 // Redirect redirects the short URL to the original long URL temporarily if the short URL exists.
 func (h *Handler) Redirect(c *gin.Context) {
 	short := []byte(c.Param("short"))
 	if len(short) > 8 || len(short) < 6 {
-		c.JSON(http.StatusBadRequest, &ShortenResponse{ShortURL: short, Error: "invalid short URL"})
+		c.JSON(http.StatusBadRequest, &ShortenResponse{ShortURL: string(short), Error: "invalid short URL"})
 		return
 	}
 
 	long, err := h.s.Retrieve(c, short)
 	if err != nil {
 		if errors.Is(err, mapping.ErrInvalidInput) {
-			c.JSON(http.StatusBadRequest, &ShortenResponse{ShortURL: short, Error: "invalid short URL"})
+			c.JSON(http.StatusBadRequest, &ShortenResponse{ShortURL: string(short), Error: "invalid short URL"})
 			return
 		}
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, &ShortenResponse{ShortURL: short, Error: "short URL not found"})
+			c.JSON(http.StatusNotFound, &ShortenResponse{ShortURL: string(short), Error: "short URL not found"})
 			return
 		}
 
-		c.JSON(http.StatusInternalServerError, &ShortenResponse{ShortURL: short, Error: err.Error()})
+		c.JSON(http.StatusInternalServerError, &ShortenResponse{ShortURL: string(short), Error: err.Error()})
 	}
 
 	c.Redirect(http.StatusFound, string(long))

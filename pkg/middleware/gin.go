@@ -46,6 +46,7 @@ func RateLimiter(limiter workqueue.RateLimiter[any]) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if !limiter.Take(c, c.Request.RemoteAddr) {
 			c.String(http.StatusTooManyRequests, "rate limit exceeded, retry later")
+			c.Abort()
 		} else {
 			c.Next()
 		}
@@ -53,10 +54,11 @@ func RateLimiter(limiter workqueue.RateLimiter[any]) gin.HandlerFunc {
 }
 
 // HealthCheck returns a middleware that checks the health of the server.
-func HealthCheck() gin.HandlerFunc {
+func HealthCheck(healthCheckPath string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if c.Request.URL.Path == "/healthcheck" {
+		if c.Request.URL.Path == healthCheckPath {
 			c.JSON(http.StatusOK, gin.H{"status": "ok"})
+			c.Abort()
 		} else {
 			c.Next()
 		}

@@ -41,9 +41,14 @@ func New() *cli.App {
 		Commands: []*cli.Command{
 			{
 				Name:   "start",
-				Usage:  "Start turl HTTP server",
+				Usage:  "Start HTTP Server",
 				Action: c.serverStart,
 				Flags:  c.getServerStartFlags(),
+			},
+			{
+				Name:   "health",
+				Usage:  "Server Healthcheck",
+				Action: c.serverHealth,
 			},
 		},
 		Flags: []cli.Flag{

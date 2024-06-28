@@ -14,10 +14,13 @@ import (
 	"github.com/beihai0xff/turl/pkg/workqueue"
 )
 
+// HealthCheckPath health check path
+const HealthCheckPath = "/healthcheck"
+
 // NewServer creates a new HTTP server.
 func NewServer(h *Handler, c *configs.ServerConfig) (*http.Server, error) {
 	router := gin.New()
-	router.Use(middleware.Logger(), middleware.HealthCheck())
+	router.Use(middleware.Logger(), middleware.HealthCheck(HealthCheckPath))
 
 	router.Use(gin.Recovery()) // recover from any panics, should be the last middleware
 	router.GET("/:short", h.Redirect).Use(middleware.RateLimiter(
@@ -26,7 +29,7 @@ func NewServer(h *Handler, c *configs.ServerConfig) (*http.Server, error) {
 	rdb := redis.Client(c.CacheConfig.RedisConfig)
 	api := router.Group("/api").Use(middleware.RateLimiter(
 		workqueue.NewItemRedisTokenRateLimiter[any](rdb, c.GlobalRateLimitKey, c.GlobalWriteRate, c.GlobalWriteBurst, time.Second)))
-	api.POST("/shorten", h.Create)
+	api.POST("/create", h.Create)
 
 	return &http.Server{
 		Addr:              fmt.Sprintf("%s:%d", c.Listen, c.Port),

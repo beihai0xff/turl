@@ -1,28 +1,29 @@
-listen: "localhost"
+listen: "0.0.0.0"
 port: 8080
 request_timeout: "5s"
 global_rate_limit_key: "turl_rate_limit"
 global_write_rate: 100
 global_write_burst: 200
-stand_alone_read_rate: 100
-stand_alone_read_burst: 200
+stand_alone_read_rate: 10000
+stand_alone_read_burst: 500
 log:
-  writers: ["file"]
+  writers: ["console", "file"]
   level: "info"
   format: "text"
-  file:
+  file_config:
     filepath: "/var/log/turl.log"
     max_size: 100
     max_age: 7
     max_backups: 3
 tddl:
-  start_id: 10000
+  start_num: 700000000
   step: 1000
+  seq_name: "turl"
 mysql:
-  dsn: "root:test123@tcp(127.0.0.1:3306)/turl?charset=utf8mb4&parseTime=True&loc=Local"
+  dsn: "root:test123@tcp(mysql:3306)/turl?charset=utf8mb4&parseTime=True&loc=Local"
 cache:
   redis:
-    addr: ["localhost:6379"]
+    addr: ["redis:6379"]
     dail_timeout: "5s"
   remote_cache_ttl: 1800s
   local_cache:

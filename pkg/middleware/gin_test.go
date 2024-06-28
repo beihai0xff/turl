@@ -111,7 +111,7 @@ func TestHealthCheck(t *testing.T) {
 
 	r := gin.New()
 
-	r.Use(HealthCheck())
+	r.Use(HealthCheck("/healthcheck"))
 
 	r.GET("/ping", func(c *gin.Context) {
 		c.String(http.StatusInternalServerError, "pong")

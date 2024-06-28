@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -24,11 +25,30 @@ func (c *serverCLI) getServerStartFlags() []cli.Flag {
 	return []cli.Flag{
 		&cli.StringFlag{
 			Name:    "file",
-			Aliases: []string{"l"},
+			Aliases: []string{"f"},
 			Usage:   "turl server config file path",
 			Value:   "./turl.yaml",
 		},
 	}
+}
+
+func (c *serverCLI) serverHealth(ctx *cli.Context) error {
+	rsp, err := http.Get(fmt.Sprintf("http://%s%s", ctx.String("addr"), turl.HealthCheckPath))
+	if err != nil {
+		slog.Error("health check failed", slog.Any("error", err))
+		return err
+	}
+
+	defer rsp.Body.Close()
+
+	if rsp.StatusCode != http.StatusOK {
+		slog.Error("health check failed", slog.Any("status", rsp.Status))
+		return fmt.Errorf("health check failed, status: %s", rsp.Status)
+	}
+
+	slog.Info("health check success")
+
+	return nil
 }
 
 func (c *serverCLI) serverStart(ctx *cli.Context) error {
