@@ -1,3 +1,6 @@
+[![codecov](https://codecov.io/gh/beihai0xff/turl/graph/badge.svg?token=DPVOTT6MIU)](https://codecov.io/gh/beihai0xff/turl)
+[![GitHub Action](https://github.com/beihai0xff/turl/actions/workflows/ci.yml/badge.svg)](https://github.com/beihai0xff/turl/actions/)
+[![Go Report Card](https://goreportcard.com/badge/github.com/beihai0xff/turl)](https://goreportcard.com/report/github.com/beihai0xff/turl)
 # turl
 tiny-url 短链接服务
 

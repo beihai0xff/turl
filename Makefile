@@ -57,19 +57,19 @@ build/docker:
 		--build-arg GO_VERSION=$(GO_VERSION) \
 		--platform=$(BUILD_PLATFORMS) \
 		--output type=docker \
-		-t turl:$(TAG_VERSION) .
+		-t beihai0xff/turl:$(TAG_VERSION) .
 
 build/docker_and_push:
 	DOCKER_BUILDKIT=1 docker buildx build \
 		--ulimit nofile=1048576:1048576 \
 		-f ./build/Dockerfile \
- 		--build-arg BUILD_DATE="$(BUILD_TIME)" \
- 		--build-arg BUILD_COMMIT="$(COMMIT_ID)" \
- 		--build-arg BUILD_VERSION="$(TAG_VERSION)" \
+		--build-arg BUILD_DATE="$(BUILD_TIME)" \
+		--build-arg BUILD_COMMIT="$(COMMIT_ID)" \
+		--build-arg BUILD_VERSION="$(TAG_VERSION)" \
 		--build-arg GO_VERSION=$(GO_VERSION) \
 		--platform=$(BUILD_PLATFORMS) \
 		--push \
-		-t turl:$(TAG_VERSION) .
+		-t beihai0xff/turl:latest .
 
 .PHONY: build build/binary build/docker build/docker_and_push
 
