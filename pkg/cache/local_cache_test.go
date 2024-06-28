@@ -13,7 +13,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	c, err := NewLocalCache(tests.GlobalConfig.CacheConfig.LocalCacheConfig)
+	c, err := NewLocalCache(tests.GlobalConfig.Cache.LocalCache)
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		c.Close()
@@ -34,7 +34,7 @@ func Test_newLocalCache_failed(t *testing.T) {
 
 func Test_newLocalCache_success(t *testing.T) {
 	// new cache failed
-	c, err := newLocalCache(tests.GlobalConfig.CacheConfig.LocalCacheConfig)
+	c, err := newLocalCache(tests.GlobalConfig.Cache.LocalCache)
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		c.Close()
@@ -48,7 +48,7 @@ func Test_newLocalCache_success(t *testing.T) {
 }
 
 func Test_localCache_Set(t *testing.T) {
-	c, err := newLocalCache(tests.GlobalConfig.CacheConfig.LocalCacheConfig)
+	c, err := newLocalCache(tests.GlobalConfig.Cache.LocalCache)
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		c.Close()
@@ -60,7 +60,7 @@ func Test_localCache_Set(t *testing.T) {
 }
 
 func Test_localCache_Get(t *testing.T) {
-	c, err := newLocalCache(tests.GlobalConfig.CacheConfig.LocalCacheConfig)
+	c, err := newLocalCache(tests.GlobalConfig.Cache.LocalCache)
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		c.Close()
@@ -79,7 +79,7 @@ func Test_localCache_Get(t *testing.T) {
 }
 
 func Test_localCache_Get_Large(t *testing.T) {
-	c, err := newLocalCache(tests.GlobalConfig.CacheConfig.LocalCacheConfig)
+	c, err := newLocalCache(tests.GlobalConfig.Cache.LocalCache)
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		c.Close()

@@ -15,21 +15,21 @@ var RedisAddr = []string{"127.0.0.1:6379"}
 var GlobalConfig = &configs.ServerConfig{
 	Listen: "localhost",
 	Port:   8080,
-	TDDLConfig: &configs.TDDLConfig{
+	TDDL: &configs.TDDLConfig{
 		Step:     100,
 		StartNum: 10000,
 		SeqName:  "tiny_url",
 	},
-	MySQLConfig: &configs.MySQLConfig{
+	MySQL: &configs.MySQLConfig{
 		DSN: DSN,
 	},
-	CacheConfig: &configs.CacheConfig{
-		RedisConfig: &configs.RedisConfig{
+	Cache: &configs.CacheConfig{
+		Redis: &configs.RedisConfig{
 			Addr:        RedisAddr,
 			DialTimeout: time.Second,
 		},
 		RemoteCacheTTL: 10 * time.Minute,
-		LocalCacheConfig: &configs.LocalCacheConfig{
+		LocalCache: &configs.LocalCacheConfig{
 			TTL:       10 * time.Minute,
 			Capacity:  1e8,
 			MaxMemory: 512,

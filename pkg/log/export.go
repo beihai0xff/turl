@@ -21,7 +21,7 @@ func SetDefaultLogger(c *configs.LogConfig) error {
 	return nil
 }
 
-// func GetLoggerByName(name string, c configs.LogConfig) (*slog.Logger, error) {
+// func GetLoggerByName(name string, c configs.Log) (*slog.Logger, error) {
 //
 // }
 

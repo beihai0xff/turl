@@ -224,7 +224,7 @@ func Test_tddlSequence_Next_timeout(t *testing.T) {
 	// set the deadline to 7 hours ago
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(-7*time.Hour))
 	cancel()
-	// beacuse the deadline is already expired, so the Next should return immediately
+	// because the deadline is already expired, so the Next should return immediately
 	// but in golang, select multi channels, the order is random, maybe the queue channel is selected first and return next value
 
 	next, err = s1.Next(ctx)

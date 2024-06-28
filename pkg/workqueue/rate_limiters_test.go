@@ -223,7 +223,7 @@ func TestMaxOfRateLimiter(t *testing.T) {
 }
 
 func TestItemRedisTokenRateLimiter(t *testing.T) {
-	rdb := redis.Client(tests.GlobalConfig.CacheConfig.RedisConfig)
+	rdb := redis.Client(tests.GlobalConfig.Cache.Redis)
 
 	ctx := context.Background()
 

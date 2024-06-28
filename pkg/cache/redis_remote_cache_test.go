@@ -11,17 +11,17 @@ import (
 )
 
 func TestNewRedisCache(t *testing.T) {
-	got := NewRedisRemoteCache(tests.GlobalConfig.CacheConfig.RedisConfig)
+	got := NewRedisRemoteCache(tests.GlobalConfig.Cache.Redis)
 	require.NotNil(t, got)
 }
 
 func Test_newRedisCache(t *testing.T) {
-	got := NewRedisRemoteCache(tests.GlobalConfig.CacheConfig.RedisConfig)
+	got := NewRedisRemoteCache(tests.GlobalConfig.Cache.Redis)
 	require.NotNil(t, got)
 }
 
 func Test_redisCache_Set(t *testing.T) {
-	c := newRedisCache(tests.GlobalConfig.CacheConfig.RedisConfig)
+	c := newRedisCache(tests.GlobalConfig.Cache.Redis)
 	t.Cleanup(
 		func() {
 			c.Close()
@@ -33,7 +33,7 @@ func Test_redisCache_Set(t *testing.T) {
 }
 
 func Test_redisCache_Get(t *testing.T) {
-	c := newRedisCache(tests.GlobalConfig.CacheConfig.RedisConfig)
+	c := newRedisCache(tests.GlobalConfig.Cache.Redis)
 	t.Cleanup(
 		func() {
 			c.Close()
