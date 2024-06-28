@@ -27,16 +27,16 @@ func NewProxy(c *configs.CacheConfig) (Interface, error) {
 }
 
 func newProxy(c *configs.CacheConfig) (*proxy, error) {
-	lc, err := NewLocalCache(c.LocalCacheConfig)
+	lc, err := NewLocalCache(c.LocalCache)
 	if err != nil {
 		return nil, err
 	}
 
 	return &proxy{
-		distributedCache: NewRedisRemoteCache(c.RedisConfig),
+		distributedCache: NewRedisRemoteCache(c.Redis),
 		localCache:       lc,
 		remoteCacheTTL:   c.RemoteCacheTTL,
-		localCacheTTL:    c.LocalCacheConfig.TTL,
+		localCacheTTL:    c.LocalCache.TTL,
 	}, nil
 }
 

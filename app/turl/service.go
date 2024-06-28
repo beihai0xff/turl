@@ -36,7 +36,7 @@ var _ Service = (*tinyURLService)(nil)
 
 // newTinyURLService creates a new tinyURLService service.
 func newTinyURLService(c *configs.ServerConfig) (*tinyURLService, error) {
-	db, err := mysql.New(c.MySQLConfig)
+	db, err := mysql.New(c.MySQL)
 	if err != nil {
 		return nil, err
 	}
@@ -45,17 +45,17 @@ func newTinyURLService(c *configs.ServerConfig) (*tinyURLService, error) {
 		return nil, err
 	}
 
-	t, err := tddl.New(db, c.TDDLConfig)
+	t, err := tddl.New(db, c.TDDL)
 	if err != nil {
 		return nil, err
 	}
 
-	cacheProxy, err := cache.NewProxy(c.CacheConfig)
+	cacheProxy, err := cache.NewProxy(c.Cache)
 	if err != nil {
 		return nil, err
 	}
 
-	rdb := redis.Client(c.CacheConfig.RedisConfig)
+	rdb := redis.Client(c.Cache.Redis)
 
 	return &tinyURLService{
 		c:     c,
@@ -83,7 +83,7 @@ func (t *tinyURLService) Create(ctx context.Context, long []byte) ([]byte, error
 	short := mapping.Base58Encode(seq)
 
 	// set local cache and distributed cache, if failed, just log the error, not return err
-	if err = t.cache.Set(ctx, string(short), long, t.c.CacheConfig.RemoteCacheTTL); err != nil {
+	if err = t.cache.Set(ctx, string(short), long, t.c.Cache.RemoteCacheTTL); err != nil {
 		slog.ErrorContext(ctx, "failed to set cache", slog.Any("error", err))
 	}
 
@@ -113,7 +113,7 @@ func (t *tinyURLService) Retrieve(ctx context.Context, short []byte) ([]byte, er
 	defer func() {
 		if len(long) > 0 {
 			// set local cache and distributed cache, if failed, just log the error, not return err
-			if cerr := t.cache.Set(ctx, string(short), long, t.c.CacheConfig.RemoteCacheTTL); cerr != nil {
+			if cerr := t.cache.Set(ctx, string(short), long, t.c.Cache.RemoteCacheTTL); cerr != nil {
 				slog.ErrorContext(ctx, "failed to set cache", slog.Any("error", err))
 			}
 		}

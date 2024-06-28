@@ -47,28 +47,28 @@ func testGet(b *testing.B, cache Interface, ttl time.Duration) {
 }
 
 func Benchmark_LocalCache_Set(b *testing.B) {
-	cache, _ := newLocalCache(tests.GlobalConfig.CacheConfig.LocalCacheConfig)
+	cache, _ := newLocalCache(tests.GlobalConfig.Cache.LocalCache)
 	defer cache.Close()
 
 	testSet(b, cache, 10*time.Minute)
 }
 
 func Benchmark_RedisCache_Set(b *testing.B) {
-	cache := NewRedisRemoteCache(tests.GlobalConfig.CacheConfig.RedisConfig)
+	cache := NewRedisRemoteCache(tests.GlobalConfig.Cache.Redis)
 	defer cache.Close()
 
 	testSet(b, cache, 10*time.Minute)
 }
 
 func Benchmark_LocalCache_Get(b *testing.B) {
-	cache, _ := newLocalCache(tests.GlobalConfig.CacheConfig.LocalCacheConfig)
+	cache, _ := newLocalCache(tests.GlobalConfig.Cache.LocalCache)
 	defer cache.Close()
 
 	testGet(b, cache, 10*time.Minute)
 }
 
 func Benchmark_RedisCache_Get(b *testing.B) {
-	cache := NewRedisRemoteCache(tests.GlobalConfig.CacheConfig.RedisConfig)
+	cache := NewRedisRemoteCache(tests.GlobalConfig.Cache.Redis)
 	defer cache.Close()
 
 	testGet(b, cache, 10*time.Minute)

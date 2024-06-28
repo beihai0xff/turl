@@ -29,15 +29,15 @@ type ServerConfig struct {
 	// StandAloneReadBurst is the token bucket burst of read api rate limiter
 	StandAloneReadBurst int `validate:"required,min=1" json:"stand_alone_read_burst" yaml:"stand_alone_read_burst" mapstructure:"stand_alone_read_burst"`
 
-	// LogConfig is the log config of turl server
-	LogConfig *LogConfig `json:"log" yaml:"log" mapstructure:"log"`
+	// Log is the log config of turl server
+	Log *LogConfig `validate:"required" json:"log" yaml:"log" mapstructure:"log"`
 
-	// TDDLConfig is the tddl config of turl server
-	TDDLConfig *TDDLConfig `json:"tddl" yaml:"tddl" mapstructure:"tddl"`
-	// MySQLConfig is the mysql config of turl server
-	MySQLConfig *MySQLConfig `json:"mysql" yaml:"mysql" mapstructure:"mysql"`
-	// CacheConfig is the cache config of turl server
-	CacheConfig *CacheConfig `json:"cache" yaml:"cache" mapstructure:"cache"`
+	// TDDL is the tddl config of turl server
+	TDDL *TDDLConfig `validate:"required" json:"tddl" yaml:"tddl" mapstructure:"tddl"`
+	// MySQL is the mysql config of turl server
+	MySQL *MySQLConfig `validate:"required" json:"mysql" yaml:"mysql" mapstructure:"mysql"`
+	// Cache is the cache config of turl server
+	Cache *CacheConfig `validate:"required" json:"cache" yaml:"cache" mapstructure:"cache"`
 }
 
 var (
@@ -57,17 +57,17 @@ func (c *ServerConfig) Validate() error {
 		return errors.New("request timeout should be greater than 1s")
 	}
 
-	for _, v := range c.LogConfig.Writers {
+	for _, v := range c.Log.Writers {
 		if !slices.Contains([]string{OutputConsole, OutputFile}, v) {
 			return errInvalidOutput
 		}
 
-		if v == OutputFile && c.LogConfig.FileConfig.Filepath == "" {
+		if v == OutputFile && c.Log.FileConfig.Filepath == "" {
 			return errNonFilePath
 		}
 	}
 
-	if !slices.Contains([]string{EncoderTypeText, EncoderTypeJSON}, c.LogConfig.Format) {
+	if !slices.Contains([]string{EncoderTypeText, EncoderTypeJSON}, c.Log.Format) {
 		return errInvalidFormat
 	}
 

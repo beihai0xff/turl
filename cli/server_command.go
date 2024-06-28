@@ -57,7 +57,7 @@ func (c *serverCLI) serverStart(ctx *cli.Context) error {
 		return err
 	}
 
-	if err = log.SetDefaultLogger(conf.LogConfig); err != nil {
+	if err = log.SetDefaultLogger(conf.Log); err != nil {
 		return err
 	}
 

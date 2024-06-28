@@ -26,7 +26,7 @@ func NewServer(h *Handler, c *configs.ServerConfig) (*http.Server, error) {
 	router.GET("/:short", h.Redirect).Use(middleware.RateLimiter(
 		workqueue.NewBucketRateLimiter[any](rate.NewLimiter(rate.Limit(c.StandAloneReadRate), c.StandAloneReadBurst))))
 
-	rdb := redis.Client(c.CacheConfig.RedisConfig)
+	rdb := redis.Client(c.Cache.Redis)
 	api := router.Group("/api").Use(middleware.RateLimiter(
 		workqueue.NewItemRedisTokenRateLimiter[any](rdb, c.GlobalRateLimitKey, c.GlobalWriteRate, c.GlobalWriteBurst, time.Second)))
 	api.POST("/create", h.Create)

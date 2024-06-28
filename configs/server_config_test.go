@@ -17,14 +17,28 @@ func TestServerConfig_Validate(t *testing.T) {
 		GlobalWriteBurst:    1,
 		StandAloneReadRate:  1,
 		StandAloneReadBurst: 1,
-		LogConfig: &LogConfig{
+		Log: &LogConfig{
 			Writers: []string{OutputConsole},
 			Format:  EncoderTypeText,
 			Level:   InfoLevel,
 		},
-		TDDLConfig:  nil,
-		MySQLConfig: nil,
-		CacheConfig: nil,
+		TDDL: &TDDLConfig{
+			Step:     1000,
+			SeqName:  "test",
+			StartNum: 10,
+		},
+		MySQL: &MySQLConfig{
+			DSN: "test",
+		},
+		Cache: &CacheConfig{
+			Redis:          nil,
+			RemoteCacheTTL: time.Second,
+			LocalCache: &LocalCacheConfig{
+				TTL:       time.Second,
+				Capacity:  100000,
+				MaxMemory: 512,
+			},
+		},
 	}
 	require.NoError(t, c.Validate())
 
