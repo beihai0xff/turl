@@ -1,6 +1,6 @@
 services:
   turl:
-    image: turl:latest
+    image: beihai0xff/turl:latest
     hostname: turl
     container_name: turl
     deploy:
