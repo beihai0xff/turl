@@ -16,5 +16,5 @@ cover.html
 # vendor/
 
 .idea
-/build/binary/
+/build/dist/
 /internal/tests/mocks/

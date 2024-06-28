@@ -41,6 +41,10 @@ func newTinyURLService(c *configs.ServerConfig) (*tinyURLService, error) {
 		return nil, err
 	}
 
+	if db.AutoMigrate(tddl.Sequence{}, storage.TinyURL{}) != nil {
+		return nil, err
+	}
+
 	t, err := tddl.New(db, c.TDDLConfig)
 	if err != nil {
 		return nil, err

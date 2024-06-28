@@ -1,16 +1,13 @@
-GIT_DESC				:= $(shell git describe --always --tags --long --match 'v[0-9]*' HEAD| sed -E 's/-/ /g')
-COMMIT_ID				?= $(lastword $(GIT_DESC))
-COMMIT_NUM				:= $(firstword $(word 3, $(GIT_DESC)) 0)
-RC_ID					:= $(firstword $(word 2, $(GIT_DESC)) rc0)
-MAIN_VERSION			:= $(subst v,,$(word 1, $(GIT_DESC)))
-GIT_TAG					:= "${RC_ID}.${COMMIT_NUM}.git.${COMMIT_ID}"
+COMMIT_ID				:= $(shell git rev-parse --short HEAD)
+TAG_VERSION				:= $(shell git describe --abbrev=0 --tags)
+BUILD_TIME				:= $(shell date)
+ARCH					:= $(shell uname -m)
 
-BUILD_TIME				:= $(shell git show -s --format=%cd)
 # fill the ldflags with the build info
-ldflags					=  "-w -X
+ldflags					=  "-w -X 'github.com/beihai0xff/turl/cli.version=$(TAG_VERSION)' -X 'github.com/beihai0xff/turl/cli.gitHash=$(COMMIT_ID)' -X 'github.com/beihai0xff/turl/cli.buildTime=$(BUILD_TIME)'"
 BUILD_PLATFORMS 		=  linux/amd64,linux/arm64
 GO_VERSION 				=  1.22-bookworm
-ARCH					=  $(shell uname -m)
+
 # different Linux(MacOS) distro use different arch name, so we unify them using the same name aarch64
 # eg. on MacOS with Apple silicon arch name is arm64, we use aarch64 as the arch name
 ifneq ($(ARCH),x86_64)
@@ -43,11 +40,7 @@ test: bootstrap gen/mock
 # build section
 #
 
-build: clean
-	docker run --rm \
-		-w /workspace \
- 		-v=$(shell pwd):/workspace \
- 		golang:$(GO_VERSION) bash -c "make build/binary && make build/rpms"
+build: build/docker
 
 # build binary file
 build/binary: clean bootstrap
@@ -60,11 +53,11 @@ build/docker:
 		-f ./build/Dockerfile \
  		--build-arg BUILD_DATE="$(BUILD_TIME)" \
  		--build-arg BUILD_COMMIT="$(COMMIT_ID)" \
- 		--build-arg BUILD_VERSION="$(MAIN_VERSION)" \
+ 		--build-arg BUILD_VERSION="$(TAG_VERSION)" \
 		--build-arg GO_VERSION=$(GO_VERSION) \
 		--platform=$(BUILD_PLATFORMS) \
 		--output type=docker \
-		-t  .
+		-t turl:$(TAG_VERSION) .
 
 build/docker_and_push:
 	DOCKER_BUILDKIT=1 docker buildx build \
@@ -72,11 +65,11 @@ build/docker_and_push:
 		-f ./build/Dockerfile \
  		--build-arg BUILD_DATE="$(BUILD_TIME)" \
  		--build-arg BUILD_COMMIT="$(COMMIT_ID)" \
- 		--build-arg BUILD_VERSION="$(MAIN_VERSION)" \
+ 		--build-arg BUILD_VERSION="$(TAG_VERSION)" \
 		--build-arg GO_VERSION=$(GO_VERSION) \
 		--platform=$(BUILD_PLATFORMS) \
 		--push \
-		-t registry. .
+		-t turl:$(TAG_VERSION) .
 
 .PHONY: build build/binary build/docker build/docker_and_push
 
@@ -94,4 +87,13 @@ upload/docker:
 	docker push
 
 .PHONY: upload/docker
+
+
+
+.PHONY: deploy
+deploy:
+	@echo "starting turl service containers..."
+	docker compose -f ./internal/example/docker-compose.yaml \
+		-p turl-service up -V --abort-on-container-exit
+	@echo "turl service containers start successfully"
 

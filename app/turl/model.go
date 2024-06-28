@@ -9,9 +9,9 @@ type ShortenRequest struct {
 // ShortenResponse is the response of shorten API
 type ShortenResponse struct {
 	// ShortURL is the shortened URL
-	ShortURL []byte `json:"short_url"`
+	ShortURL string `json:"short_url"`
 	// LongURL is the original long URL
-	LongURL []byte `json:"long_url"`
+	LongURL string `json:"long_url"`
 	// Error is the error message if any error occurs
 	Error string `json:"error"`
 }

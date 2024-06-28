@@ -7,7 +7,7 @@ const (
 	// DefaultHost default host
 	DefaultHost = "localhost"
 	// DefaultPort default http server port
-	DefaultPort = 80
+	DefaultPort = 8080
 
 	// VersionV1 api version
 	VersionV1 = "/v1"

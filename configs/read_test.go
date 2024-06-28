@@ -9,7 +9,7 @@ import (
 )
 
 func TestReadFile(t *testing.T) {
-	c, err := ReadFile("../internal/tests/data/test.config.yaml")
+	c, err := ReadFile("../internal/example/config.yaml")
 	require.NoError(t, err)
 	require.NotNil(t, c)
 
