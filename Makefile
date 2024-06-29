@@ -33,6 +33,7 @@ gen/swagger:
 test: bootstrap gen/mock
 	docker compose -f ./internal/tests/docker-compose.yaml up -d --wait
 	go test -gcflags="all=-l" -race -coverprofile=coverage.out -v ./...
+	docker compose -f ./internal/tests/docker-compose.yaml down
 
 
 .PHONY: bootstrap lint gen/mock gen/struct_tag gen/swagger test
@@ -57,7 +58,7 @@ build/docker:
 		--build-arg GO_VERSION=$(GO_VERSION) \
 		--platform=$(BUILD_PLATFORMS) \
 		--output type=docker \
-		-t beihai0xff/turl:$(TAG_VERSION) .
+		-t beihai0xff/turl:latest -t beihai0xff/turl:$(TAG_VERSION) .
 
 build/docker_and_push:
 	DOCKER_BUILDKIT=1 docker buildx build \
@@ -69,7 +70,7 @@ build/docker_and_push:
 		--build-arg GO_VERSION=$(GO_VERSION) \
 		--platform=$(BUILD_PLATFORMS) \
 		--push \
-		-t beihai0xff/turl:latest .
+		-t beihai0xff/turl:latest -t beihai0xff/turl:$(TAG_VERSION) .
 
 .PHONY: build build/binary build/docker build/docker_and_push
 

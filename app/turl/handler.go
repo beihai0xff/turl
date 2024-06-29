@@ -2,6 +2,7 @@ package turl
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -13,7 +14,8 @@ import (
 
 // Handler represents the request handler.
 type Handler struct {
-	s Service
+	domain string
+	s      Service
 }
 
 // NewHandler creates a new Handler.
@@ -24,7 +26,8 @@ func NewHandler(c *configs.ServerConfig) (*Handler, error) {
 	}
 
 	return &Handler{
-		s: s,
+		s:      s,
+		domain: c.Domain,
 	}, nil
 }
 
@@ -32,9 +35,9 @@ func NewHandler(c *configs.ServerConfig) (*Handler, error) {
 func (h *Handler) Create(c *gin.Context) {
 	var req ShortenRequest
 
-	if c.ShouldBind(&req) != nil {
+	if err := c.ShouldBind(&req); err != nil {
 		c.JSON(http.StatusBadRequest, &ShortenResponse{LongURL: req.LongURL,
-			Error: "invalid request param 'long_url'"})
+			Error: err.Error()})
 		return
 	}
 
@@ -44,7 +47,7 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, &ShortenResponse{ShortURL: string(short), LongURL: req.LongURL})
+	c.JSON(http.StatusOK, &ShortenResponse{ShortURL: fmt.Sprintf("%s/%s", h.domain, short), LongURL: req.LongURL})
 }
 
 // Redirect redirects the short URL to the original long URL temporarily if the short URL exists.

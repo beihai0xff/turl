@@ -18,7 +18,7 @@ import (
 
 func TestHandler_Create(t *testing.T) {
 	mockService := mocks.NewMockTURLService(t)
-	h := &Handler{s: mockService}
+	h := &Handler{s: mockService, domain: "https://www.example.com"}
 
 	router := gin.Default()
 	router.POST("/create", h.Create)
@@ -33,6 +33,7 @@ func TestHandler_Create(t *testing.T) {
 		router.ServeHTTP(resp, req)
 
 		require.Equal(t, http.StatusOK, resp.Code)
+		require.Equal(t, `{"short_url":"https://www.example.com/abc123","long_url":"https://www.example.com","error":""}`, resp.Body.String())
 	})
 
 	t.Run("CreateInvalidURL", func(t *testing.T) {
