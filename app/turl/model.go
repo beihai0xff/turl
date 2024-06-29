@@ -3,7 +3,7 @@ package turl
 // ShortenRequest is the request of shorten API
 type ShortenRequest struct {
 	// LongURL is the original long URL
-	LongURL string `json:"long_url" form:"long_url" xml:"long_url" binding:"required,http_url"`
+	LongURL string `binding:"required,http_url" json:"long_url" form:"long_url" xml:"long_url"`
 }
 
 // ShortenResponse is the response of shorten API

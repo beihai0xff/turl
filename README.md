@@ -1,8 +1,9 @@
 [![codecov](https://codecov.io/gh/beihai0xff/turl/graph/badge.svg?token=DPVOTT6MIU)](https://codecov.io/gh/beihai0xff/turl)
 [![GitHub Action](https://github.com/beihai0xff/turl/actions/workflows/ci.yml/badge.svg)](https://github.com/beihai0xff/turl/actions/)
 [![Go Report Card](https://goreportcard.com/badge/github.com/beihai0xff/turl)](https://goreportcard.com/report/github.com/beihai0xff/turl)
+
 # turl
-tiny-url 短链接服务
+Tiny-URL 短链接服务
 
 在社交媒体、用户增长、广告投放等场景中，经常会遇到长链接转短链接的需求，提高用户点击率更高，同时能规避原始链接中一些关键词、域名屏蔽等。常见微博、微信等社交软件中，比如微博限制字数为140，如果包含的链接过长，会占用很多字数，所以需要将长链接转换为短链接，以节省字数。
 
@@ -15,28 +16,59 @@ tiny-url 短链接服务
 # Features
 
 ## 开发进度
-- [x] 发号器：基于 TDDL 生成唯一的短链接 ID；
+- [x] 分布式 ID 生成器：基于 TDDL 生成唯一的 ID；
 - [x] 分布式缓存：支持 Redis 缓存；
 - [x] 本地缓存：支持 bigcache 本地缓存；
 - [x] 数据库：支持 MySQL 数据库；
-- [ ] URL 302 重定向；
-- [ ] url 编码：支持 Base58 编码；
-- [ ] 限流器：支持漏桶限流器；
+- [x] URL 302 重定向；
+- [x] URL 编码：支持 Base58 编码；
+- [x] 限流器：支持 Redis 与单机令牌桶限流器；
+- [ ] 幂等：同一 URL 多次生成，需要保证生成的短链接是唯一的
+- [ ] 读写分离：只读/只写/读写模式运行；
 - [ ] 过期时间：支持短链接过期时间；
+- [ ] 可观测：API 访问数据数据、服务监控；
+
+# 快速体验
+
+## 本地运行
+
+确保本地已经安装了 Docker 与 Docker Compose，然后执行以下命令：
+```shell
+make deploy
+```
+
+终端输出 `turl service containers start successfully` 后，说明服务已经启动成功。
+
+## API 接口
+
+### 生成短链接
+
+```shell
+curl -X POST http://localhost:8080/api/shorten -H 'Content-Type: application/json' -d '{"long_url": "https://google.com"}'
+{"short_url":"http://localhost:8080/24rgcX","long_url":"https://google.com","error":""}
+```
+
+### 访问短链接
+
+访问短链接 `http://localhost:8080/24rgcX`，将会被重定向到原始的长链接 `https://google.com`。
+
+```shell
+curl -L http://localhost:8080/24rgcX
+```
 
 # 短链接服务系统设计
 
 ## 功能需求
 * 短链接生成：给定一个长链接，能够生成一个唯一的短链接，即使多次生成同一个长链接，也能保证生成的短链接是唯一的。
 * 短链接重定向：通过短链接能够访问到原始的长链接，通过 302 临时重定向的方式，将用户重定向到原始的长链接，临时重定向的方式可以保证搜索引擎不会抓取短链接，而是抓取原始的长链接，并且便于统计短链接的访问次数。
+* 访问限流：对短链接的访问可以设置限流，限制每个短链接单位时间内的的访问次数。
 * 过期时间：短链接可以设置过期时间，过期时间到了之后，短链接将失效，无法再访问到原始的长链接。
 * 短链接删除：短链接可以删除，删除之后，短链接将失效，无法再访问到原始的长链接。
-* 访问限流：对短链接的访问可以设置限流，限制每个短链接单位时间内的的访问次数。
 
 ## 非功能需求
 
 * 高可用：短链接服务需要保证高可用，即使某个节点宕机，也不影响整个服务的正常使用。
-* 高性能：短链接服务需要保证高性能，能够支撑大量的并发访问。
+* 高性能：短链接服务需要保证高性能，能够支撑每秒十万
 * 低延迟：短链接服务需要保证低延迟，用户访问短链接时，能够快速的重定向到原始的长链接。
 * 高可扩展性：短链接服务需要保证高可扩展性，能够支持大量的短链接生成和访问。
 * 高可靠性：短链接服务需要保证高可靠性，能够保证短链接的生成和访问的正确性。
@@ -62,76 +94,3 @@ tiny-url 短链接服务
   * 数据库读写请求数：平均每秒 116qps 的写入操作与读取操作，峰值 1k/qps 的写入操作与读取操作；
   * 缓存服务器内存空间：总共需要 50GB 内存空间，缓存约 1亿条数据；
   * 本地缓存存储空间：每台 Server 节点需要 500MB 内存空间用于本地缓存，缓存约 1M 条数据；
-
-## 系统设计
-
-### 业务流程
-
-#### 短链接生成
-
-1. 用户输入长链接，点击生成短链接；
-2. 服务端接收到请求，从发号器获取唯一的标识 ID，并将 UID 转换为 8位 Base58 编码；
-3. 服务端将短链接与长链接的映射关系存储到数据库中；
-
-#### 短链接访问
-
-1. 用户访问短链接；
-2. 服务端接收到请求，从短链接中解析出 UID；
-3. 服务端根据 UID 依次从本地缓存、远程缓存、数据库中获取长链接；
-4. 服务端返回 302 临时重定向，将用户重定向到原始的长链接；
-
-### 技术选型
-
-#### 分布式 ID
-
-短链接发号器需要保证生成的短链接是唯一的，可以使用分布式 ID 生成器，如 Twitter 的 Snowflake 算法，或者使用数据库自增 ID 生成器等等，下面将描述不同方案的优缺点：
-
-**数据库自增 ID**
-
-将数据库自增 ID 作为短链接 UID，然后将 UID 转换为 Base58 编码，即可生成短链接。
-   * 优点：简单易用，生成的 ID 是唯一的；
-   * 缺点：依赖于数据库，数据库的性能将成为瓶颈，不适合高并发场景，如果采用数据库集群，需要避免 ID 重复；并且数据库自增 ID 是有序的，可能会暴露业务规模；
-
-**Redis 自增序列**
-
-将 Redis 的自增序列作为短链接 UID，然后将 UID 转换为 Base58 编码，即可生成短链接。
-   * 优点：高性能，生成的 ID 是唯一的；
-   * 缺点：Redis 是基于内存的，如果 Redis 宕机，可能会导致 ID 重复，需要保证 Redis 的高可用；ID 自增是有序的，可能会暴露业务规模；
-
-**UUID**
-
-使用 UUID 作为短链接 UID。
-   * 优点：生成的 ID 是唯一的，不依赖于数据库；
-   * 缺点：UUID 是 128 位的，转换为 Base58 编码后，短链接长度过长，不适合短链接服务；且 UUID 是无序的，插入数据时可能会导致数据库的性能问题；
-
-**Snowflake 算法**
-   * 优点：高性能，高可用，生成的 ID 是唯一的；
-   * 缺点：需要依赖于时钟，时钟回拨会导致 ID 重复，需要保证时钟的稳定性；
-
-**TDDL 序列**
-
-  在数据库中创建一个序列表，用于存储序列的当前值，然后通过数据库的原子操作来获取下一个序列区间，然后在内存中递增序列值，当序列值用尽时，再次获取下一个序列区间。
-   * 优点：生成的 ID 是唯一的，避免了数据库自增 ID 的性能瓶颈；
-   * 缺点：具有一定的维护成本。
-
-综上所述，我们可以选择 TDDL 序列算法作为短链接发号器，保证生成的短链接是唯一的，同时 TDDL 序列算法也便于根据 short ID 进行分库分表，适合高并发场景。
-
-#### 数据存储
-
-短链接服务需要存储短链接与长链接的映射关系，可以选择关系型数据库、NoSQL 数据库等，turl 首要支持 MySQL 等关系型数据库，未来考虑支持 MongoDB 等 NoSQL 数据库。
-
-MySQL 数据库表设计如下：
-
-```sql
- CREATE TABLE `turl` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '自增 ID',
-  `long_url` varchar(255) NOT NULL COMMENT '长链接',
-  `expire_time` datetime DEFAULT NULL COMMENT '过期时间',
-  `create_time` datetime NOT NULL COMMENT '创建时间',
-  `update_time` datetime NOT NULL COMMENT '更新时间',
-  PRIMARY KEY (`id`),
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='短链接表';
-```
-
-
-

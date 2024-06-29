@@ -18,10 +18,9 @@ func TestMain(m *testing.M) {
 	}
 
 	exitCode := m.Run()
-	defer func() {
-		tests.DropTable(tddl.Sequence{})
-		tests.DropTable(storage.TinyURL{})
-	}()
+
+	tests.DropTable(tddl.Sequence{})
+	tests.DropTable(storage.TinyURL{})
 
 	os.Exit(exitCode)
 }

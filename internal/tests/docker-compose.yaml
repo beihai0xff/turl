@@ -2,7 +2,7 @@
 services:
   mysql:
     image: mysql
-    container_name: mysql
+    container_name: test-mysql
     restart: always
     ports:
       - "3306:3306"
@@ -17,7 +17,7 @@ services:
 
   redis:
     image: redis/redis-stack-server:7.2.0-v11
-    container_name: redis
+    container_name: test-redis
     restart: always
     ports:
       - '6379:6379'

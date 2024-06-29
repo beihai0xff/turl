@@ -11,6 +11,7 @@ func TestServerConfig_Validate(t *testing.T) {
 	c := &ServerConfig{
 		Listen:              "127.0.0.1",
 		Port:                1231,
+		Domain:              "127.0.0.1",
 		RequestTimeout:      time.Second,
 		GlobalRateLimitKey:  "test_rate",
 		GlobalWriteRate:     1,

@@ -1,5 +1,6 @@
 listen: "0.0.0.0"
 port: 8080
+domain: "http://localhost:8080"
 request_timeout: "5s"
 global_rate_limit_key: "turl_rate_limit"
 global_write_rate: 100
@@ -24,7 +25,7 @@ mysql:
 cache:
   redis:
     addr: ["redis:6379"]
-    dail_timeout: "5s"
+    dial_timeout: "5s"
   remote_cache_ttl: 1800s
   local_cache:
     ttl: 600s
