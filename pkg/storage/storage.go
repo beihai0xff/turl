@@ -1,10 +1,9 @@
-// Package pkg provides the implementation of the storage interface.
+// Package storage provides the implementation of the storage interface.
 package storage
 
 import (
 	"context"
 
-	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
@@ -35,20 +34,18 @@ func (TinyURL) TableName() string {
 
 // storage is a concrete implementation of the Storage interface.
 type storage struct {
-	db  *gorm.DB              // Database client.
-	rdb redis.UniversalClient // Redis client.
+	db *gorm.DB // Database client.
 }
 
 // New creates a new storage instance.
-func New(db *gorm.DB, rdb redis.UniversalClient) Storage {
-	return newStorage(db, rdb)
+func New(db *gorm.DB) Storage {
+	return newStorage(db)
 }
 
 // newStorage is a helper function that creates a new storage instance.
-func newStorage(db *gorm.DB, rdb redis.UniversalClient) *storage {
+func newStorage(db *gorm.DB) *storage {
 	return &storage{
-		db:  db,
-		rdb: rdb,
+		db: db,
 	}
 }
 
@@ -78,5 +75,5 @@ func (s *storage) GetTinyURLByID(ctx context.Context, short uint64) (*TinyURL, e
 
 // Close closes the storage.
 func (s *storage) Close() error {
-	return s.rdb.Close()
+	return nil
 }

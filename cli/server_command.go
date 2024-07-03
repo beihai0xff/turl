@@ -19,17 +19,27 @@ import (
 	"github.com/beihai0xff/turl/pkg/shutdown"
 )
 
+var (
+	configPathFlag = &cli.StringFlag{
+		Name:    "file",
+		Aliases: []string{"f"},
+		Usage:   "turl server config file path",
+		Value:   "./config.yaml",
+		EnvVars: []string{"TURL_CONFIG_FILE", "TURL_FILE"},
+	}
+	readonlyFlag = &cli.BoolFlag{
+		Name:    "readonly",
+		Aliases: []string{"ro"},
+		Usage:   "start server in read-only mode",
+		Value:   false,
+		EnvVars: []string{"TURL_READONLY", "TURL_RO"},
+	}
+)
+
 type serverCLI struct{}
 
 func (c *serverCLI) getServerStartFlags() []cli.Flag {
-	return []cli.Flag{
-		&cli.StringFlag{
-			Name:    "file",
-			Aliases: []string{"f"},
-			Usage:   "turl server config file path",
-			Value:   "./turl.yaml",
-		},
-	}
+	return []cli.Flag{configPathFlag, readonlyFlag}
 }
 
 func (c *serverCLI) serverHealth(ctx *cli.Context) error {
@@ -95,9 +105,14 @@ func (c *serverCLI) serverStart(ctx *cli.Context) error {
 }
 
 func (c *serverCLI) parseServerStartConfig(ctx *cli.Context) (*configs.ServerConfig, error) {
-	filePath := ctx.String("file")
+	filePath := ctx.String(configPathFlag.Name)
 
-	conf, err := configs.ReadFile(filePath)
+	var mp = map[string]interface{}{}
+	if ctx.Bool(readonlyFlag.Name) {
+		mp[readonlyFlag.Name] = true
+	}
+
+	conf, err := configs.ReadFile(filePath, mp)
 	if err != nil {
 		slog.Error("read server config file failed", slog.Any("error", err), slog.Any("file", filePath))
 		return nil, err

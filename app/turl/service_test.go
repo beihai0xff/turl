@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -17,8 +18,8 @@ import (
 	"github.com/beihai0xff/turl/pkg/tddl"
 )
 
-func TestTinyURL_Create(t *testing.T) {
-	turl, err := newTinyURLService(tests.GlobalConfig)
+func TestService_Create(t *testing.T) {
+	turl, err := newService(tests.GlobalConfig)
 	require.NoError(t, err)
 
 	t.Run("CreateNewURL", func(t *testing.T) {
@@ -34,11 +35,11 @@ func TestTinyURL_Create(t *testing.T) {
 	})
 }
 
-func TestTinyURL_Retrieve(t *testing.T) {
+func TestService_Retrieve(t *testing.T) {
 	require.NoError(t, tests.CreateTable(tddl.Sequence{}))
 	require.NoError(t, tests.CreateTable(storage.TinyURL{}))
 
-	turl, err := newTinyURLService(tests.GlobalConfig)
+	turl, err := newService(tests.GlobalConfig)
 	require.NoError(t, err)
 
 	t.Run("RetrieveExistingURL", func(t *testing.T) {
@@ -56,8 +57,8 @@ func TestTinyURL_Retrieve(t *testing.T) {
 	})
 }
 
-func TestTinyURL_Close(t *testing.T) {
-	turl, err := newTinyURLService(tests.GlobalConfig)
+func TestService_Close(t *testing.T) {
+	turl, err := newService(tests.GlobalConfig)
 	require.NoError(t, err)
 
 	t.Run("CloseService", func(t *testing.T) {
@@ -66,11 +67,11 @@ func TestTinyURL_Close(t *testing.T) {
 	})
 }
 
-func TestTinyURL_Create_failed(t *testing.T) {
+func TestService_Create_failed(t *testing.T) {
 	mockTDDL, mockCache, mockStorage := mocks.NewMockTDDL(t), mocks.NewMockCache(t), mocks.NewMockStorage(t)
 
-	turl := &tinyURLService{
-		c:     tests.GlobalConfig,
+	turl := &commandService{
+		ttl:   time.Second,
 		db:    mockStorage,
 		cache: mockCache,
 		seq:   mockTDDL,
@@ -100,14 +101,13 @@ func TestTinyURL_Create_failed(t *testing.T) {
 	})
 }
 
-func TestTinyURL_Retrieve_failed(t *testing.T) {
-	mockTDDL, mockCache, mockStorage := mocks.NewMockTDDL(t), mocks.NewMockCache(t), mocks.NewMockStorage(t)
+func TestService_Retrieve_failed(t *testing.T) {
+	mockCache, mockStorage := mocks.NewMockCache(t), mocks.NewMockStorage(t)
 
-	turl := &tinyURLService{
-		c:     tests.GlobalConfig,
+	turl := &queryService{
+		ttl:   time.Second,
 		db:    mockStorage,
 		cache: mockCache,
-		seq:   mockTDDL,
 	}
 
 	testErr := errors.New("test error")
