@@ -19,6 +19,26 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+  turl-ro:
+    image: beihai0xff/turl:latest
+    hostname: turl-ro
+    container_name: turl-ro
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    command: "-f /app/config.yaml --readonly"
+    volumes:
+      - ./config.yaml:/app/config.yaml
+    ports:
+      - "80:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   mysql:
     image: mysql

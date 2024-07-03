@@ -18,6 +18,8 @@ type ServerConfig struct {
 	Port int `validate:"required,min=1,max=65535" json:"port" yaml:"port" mapstructure:"port"`
 	// Domain is the domain of redirect url
 	Domain string `validate:"required" json:"domain" yaml:"domain" mapstructure:"domain"`
+	// Readonly is the read-only mode of turl server
+	Readonly bool `json:"readonly" yaml:"readonly" mapstructure:"readonly"`
 	// RequestTimeout is the http server request timeout of turl server
 	RequestTimeout time.Duration `validate:"required" json:"request_timeout" yaml:"request_timeout" mapstructure:"request_timeout"`
 	// GlobalRateLimitKey is the key of global rate limiter

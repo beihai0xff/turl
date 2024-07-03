@@ -26,10 +26,12 @@ func NewServer(h *Handler, c *configs.ServerConfig) (*http.Server, error) {
 	router.GET("/:short", h.Redirect).Use(middleware.RateLimiter(
 		workqueue.NewBucketRateLimiter[any](rate.NewLimiter(rate.Limit(c.StandAloneReadRate), c.StandAloneReadBurst))))
 
-	rdb := redis.Client(c.Cache.Redis)
-	api := router.Group("/api").Use(middleware.RateLimiter(
-		workqueue.NewItemRedisTokenRateLimiter[any](rdb, c.GlobalRateLimitKey, c.GlobalWriteRate, c.GlobalWriteBurst, time.Second)))
-	api.POST("/shorten", h.Create)
+	if !c.Readonly {
+		rdb := redis.Client(c.Cache.Redis)
+		api := router.Group("/api").Use(middleware.RateLimiter(
+			workqueue.NewItemRedisTokenRateLimiter[any](rdb, c.GlobalRateLimitKey, c.GlobalWriteRate, c.GlobalWriteBurst, time.Second)))
+		api.POST("/shorten", h.Create)
+	}
 
 	return &http.Server{
 		Addr:              fmt.Sprintf("%s:%d", c.Listen, c.Port),

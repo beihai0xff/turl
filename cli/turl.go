@@ -3,7 +3,6 @@ package cli
 
 import (
 	"fmt"
-	"io"
 	"runtime"
 
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -88,12 +87,5 @@ func versionPrinter(c *cli.Context) {
 		Title:   table.TitleOptionsDefault,
 	})
 	t.SetOutputMirror(c.App.Writer)
-	t.Render()
-}
-
-func renderTable(writer io.Writer, t table.Writer) {
-	t.SetStyle(table.StyleLight)
-	t.SetAutoIndex(true)
-	t.SetOutputMirror(writer)
 	t.Render()
 }

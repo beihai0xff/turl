@@ -20,7 +20,7 @@ type Handler struct {
 
 // NewHandler creates a new Handler.
 func NewHandler(c *configs.ServerConfig) (*Handler, error) {
-	s, err := newTinyURLService(c)
+	s, err := newService(c)
 	if err != nil {
 		return nil, err
 	}

@@ -45,8 +45,7 @@ func Logger() gin.HandlerFunc {
 func RateLimiter(limiter workqueue.RateLimiter[any]) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if !limiter.Take(c, c.Request.RemoteAddr) {
-			c.String(http.StatusTooManyRequests, "rate limit exceeded, retry later")
-			c.Abort()
+			c.AbortWithStatus(http.StatusTooManyRequests)
 		} else {
 			c.Next()
 		}
@@ -57,8 +56,7 @@ func RateLimiter(limiter workqueue.RateLimiter[any]) gin.HandlerFunc {
 func HealthCheck(healthCheckPath string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.URL.Path == healthCheckPath {
-			c.JSON(http.StatusOK, gin.H{"status": "ok"})
-			c.Abort()
+			c.AbortWithStatusJSON(http.StatusOK, gin.H{"status": "ok"})
 		} else {
 			c.Next()
 		}

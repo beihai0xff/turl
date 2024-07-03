@@ -23,8 +23,8 @@ Tiny-URL 短链接服务
 - [x] URL 302 重定向；
 - [x] URL 编码：支持 Base58 编码；
 - [x] 限流器：支持 Redis 与单机令牌桶限流器；
+- [x] 读写分离：只读/只写/读写模式运行；
 - [ ] 幂等：同一 URL 多次生成，需要保证生成的短链接是唯一的
-- [ ] 读写分离：只读/只写/读写模式运行；
 - [ ] 过期时间：支持短链接过期时间；
 - [ ] 可观测：API 访问数据数据、服务监控；
 
@@ -38,6 +38,9 @@ make deploy
 ```
 
 终端输出 `turl service containers start successfully` 后，说明服务已经启动成功。
+该模式会部署 MySQL 与 Redis 服务，作为本地存储与缓存服务器。同时会启动两个服务节点，一个用于读写操作，另一个用于只读操作。
+- 读写服务：http://localhost:8080，用于生成短链接、更新远程缓存、更新数据库等；
+- 只读服务：http://localhost:80，只用于访问短链接，不支持生成短链接，生产环境中可以部署多个只读服务节点，用于分流读取请求。
 
 ## API 接口
 
@@ -45,15 +48,15 @@ make deploy
 
 ```shell
 curl -X POST http://localhost:8080/api/shorten -H 'Content-Type: application/json' -d '{"long_url": "https://google.com"}'
-{"short_url":"http://localhost:8080/24rgcX","long_url":"https://google.com","error":""}
+{"short_url":"http://localhost/24rgcX","long_url":"https://google.com","error":""}
 ```
 
 ### 访问短链接
 
-访问短链接 `http://localhost:8080/24rgcX`，将会被重定向到原始的长链接 `https://google.com`。
+访问短链接 `http://localhost/24rgcX`，将会被重定向到原始的长链接 `https://google.com`。
 
 ```shell
-curl -L http://localhost:8080/24rgcX
+curl -L http://localhost/24rgcX
 ```
 
 # 短链接服务系统设计
