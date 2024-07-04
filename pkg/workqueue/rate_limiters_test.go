@@ -237,6 +237,16 @@ func TestItemRedisTokenRateLimiter(t *testing.T) {
 		require.False(t, r.Take(ctx, "one"))
 	})
 
+	t.Run("Take_Rate", func(t *testing.T) {
+		r := NewItemRedisTokenRateLimiter[any](rdb, "Take_Rate", 10, 1, time.Second)
+		require.True(t, r.Take(ctx, "one"))
+		require.False(t, r.Take(ctx, "one"))
+		require.False(t, r.Take(ctx, "one"))
+		// create a new one to test the rate limit
+		r = NewItemRedisTokenRateLimiter[any](rdb, "Take_Rate", 1, 1, time.Second)
+		require.False(t, r.Take(ctx, "one"))
+	})
+
 	t.Run("When", func(t *testing.T) {
 		r := NewItemRedisTokenRateLimiter[any](rdb, "test_When", 1, 1, time.Second)
 		require.Zero(t, r.When(ctx, "one"))
