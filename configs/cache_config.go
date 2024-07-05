@@ -9,6 +9,10 @@ type RedisConfig struct {
 	// DialTimeout Dial timeout for establishing new connections.
 	// Default is 5 seconds.
 	DialTimeout time.Duration `validate:"required" json:"dial_timeout" yaml:"dial_timeout" mapstructure:"dial_timeout"`
+	// MaxIdleConn is the max open connections
+	MaxConn int `validate:"required,min=1" json:"max_conn" yaml:"max_conn" mapstructure:"max_conn"`
+	// TTL is the redis cache ttl
+	TTL time.Duration `validate:"required" json:"ttl" yaml:"ttl" mapstructure:"ttl"`
 }
 
 // LocalCacheConfig is the local cache config of turl server
@@ -25,8 +29,6 @@ type LocalCacheConfig struct {
 type CacheConfig struct {
 	// Redis is the redis config of turl server
 	Redis *RedisConfig `json:"redis" yaml:"redis" mapstructure:"redis"`
-	// RemoteCacheTTL is the remote cache ttl
-	RemoteCacheTTL time.Duration `validate:"required" json:"remote_cache_ttl" yaml:"remote_cache_ttl" mapstructure:"remote_cache_ttl"`
 	// LocalCache is the local cache config
 	LocalCache *LocalCacheConfig `validate:"required" json:"local_cache" yaml:"local_cache" mapstructure:"local_cache"`
 }

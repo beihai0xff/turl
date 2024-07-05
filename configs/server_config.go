@@ -16,6 +16,8 @@ type ServerConfig struct {
 	Listen string `validate:"required,ip_addr|hostname" json:"listen" yaml:"listen" mapstructure:"listen"`
 	// Port is the http server port of turl server
 	Port int `validate:"required,min=1,max=65535" json:"port" yaml:"port" mapstructure:"port"`
+	// Debug is the debug mode of turl server
+	Debug bool `json:"debug" yaml:"debug" mapstructure:"debug"`
 	// Domain is the domain of redirect url
 	Domain string `validate:"required" json:"domain" yaml:"domain" mapstructure:"domain"`
 	// Readonly is the read-only mode of turl server

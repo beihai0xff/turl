@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	tokenFormat     = "{%s}.tokens" // nolint: gosec
+	tokenFormat     = "{%s}.tokens" //nolint: gosec
 	timestampFormat = "{%s}.ts"
 	pingInterval    = time.Millisecond * 100
 )
@@ -112,7 +112,7 @@ func (r *ItemExponentialFailureRateLimiter[T]) When(_ context.Context, item T) t
 	r.failures[item]++
 
 	// The backoff is capped such that 'calculated' value never overflows.
-	backoff := float64(r.baseDelay.Nanoseconds()) * math.Pow(2, float64(exp)) // nolint: mnd
+	backoff := float64(r.baseDelay.Nanoseconds()) * math.Pow(2, float64(exp)) //nolint: mnd
 	if backoff > math.MaxInt64 {
 		return r.maxDelay
 	}

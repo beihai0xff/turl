@@ -21,14 +21,16 @@ var GlobalConfig = &configs.ServerConfig{
 		SeqName:  "tiny_url",
 	},
 	MySQL: &configs.MySQLConfig{
-		DSN: DSN,
+		DSN:     DSN,
+		MaxConn: 25,
 	},
 	Cache: &configs.CacheConfig{
 		Redis: &configs.RedisConfig{
 			Addr:        RedisAddr,
 			DialTimeout: time.Second,
+			MaxConn:     25,
+			TTL:         10 * time.Minute,
 		},
-		RemoteCacheTTL: 10 * time.Minute,
 		LocalCache: &configs.LocalCacheConfig{
 			TTL:       10 * time.Minute,
 			Capacity:  1e8,

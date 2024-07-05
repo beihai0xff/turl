@@ -35,7 +35,7 @@ func newProxy(c *configs.CacheConfig) (*proxy, error) {
 	return &proxy{
 		distributedCache: NewRedisRemoteCache(c.Redis),
 		localCache:       lc,
-		remoteCacheTTL:   c.RemoteCacheTTL,
+		remoteCacheTTL:   c.Redis.TTL,
 		localCacheTTL:    c.LocalCache.TTL,
 	}, nil
 }

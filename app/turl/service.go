@@ -8,6 +8,8 @@ import (
 	"log/slog"
 	"time"
 
+	"gorm.io/gorm"
+
 	"github.com/beihai0xff/turl/configs"
 	"github.com/beihai0xff/turl/pkg/cache"
 	"github.com/beihai0xff/turl/pkg/db/mysql"
@@ -31,9 +33,29 @@ type service struct {
 	*queryService
 }
 
+func getDB(c *configs.ServerConfig) (*gorm.DB, error) {
+	db, err := mysql.New(c.MySQL)
+	if err != nil {
+		return nil, err
+	}
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, err
+	} else if c.Debug {
+		go func() {
+			for range time.NewTicker(time.Second).C {
+				slog.Info(fmt.Sprintf("mysql db stats %+v", sqlDB.Stats()))
+			}
+		}()
+	}
+
+	return db, nil
+}
+
 // newService creates a new commandService service.
 func newService(c *configs.ServerConfig) (*service, error) {
-	db, err := mysql.New(c.MySQL)
+	db, err := getDB(c)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +68,7 @@ func newService(c *configs.ServerConfig) (*service, error) {
 	if c.Readonly {
 		return &service{
 			queryService: &queryService{
-				ttl:   c.Cache.RemoteCacheTTL,
+				ttl:   c.Cache.Redis.TTL,
 				db:    storage.New(db),
 				cache: cacheProxy,
 			},
@@ -69,13 +91,13 @@ func newService(c *configs.ServerConfig) (*service, error) {
 
 	return &service{
 		commandService: &commandService{
-			ttl:   c.Cache.RemoteCacheTTL,
+			ttl:   c.Cache.Redis.TTL,
 			db:    storage.New(db),
 			cache: writeCacheProxy,
 			seq:   t,
 		},
 		queryService: &queryService{
-			ttl:   c.Cache.RemoteCacheTTL,
+			ttl:   c.Cache.Redis.TTL,
 			db:    storage.New(db),
 			cache: cacheProxy,
 		},
