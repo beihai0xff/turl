@@ -5,6 +5,8 @@ import (
 	"log/slog"
 	"os"
 
+	_ "go.uber.org/automaxprocs"
+
 	"github.com/beihai0xff/turl/cli"
 )
 
