@@ -23,23 +23,30 @@ var (
 	configPathFlag = &cli.StringFlag{
 		Name:    "file",
 		Aliases: []string{"f"},
-		Usage:   "turl server config file path",
+		Usage:   "TURL Server Config File Path",
 		Value:   "./config.yaml",
 		EnvVars: []string{"TURL_CONFIG_FILE", "TURL_FILE"},
 	}
 	readonlyFlag = &cli.BoolFlag{
 		Name:    "readonly",
 		Aliases: []string{"ro"},
-		Usage:   "start server in read-only mode",
+		Usage:   "Start Server IN Read-Only Mode",
 		Value:   false,
 		EnvVars: []string{"TURL_READONLY", "TURL_RO"},
+	}
+	debugFlag = &cli.BoolFlag{
+		Name:    "debug",
+		Aliases: []string{"d"},
+		Usage:   "Enable Debug Mode",
+		Value:   false,
+		EnvVars: []string{"TURL_DEBUG"},
 	}
 )
 
 type serverCLI struct{}
 
 func (c *serverCLI) getServerStartFlags() []cli.Flag {
-	return []cli.Flag{configPathFlag, readonlyFlag}
+	return []cli.Flag{configPathFlag, readonlyFlag, debugFlag}
 }
 
 func (c *serverCLI) serverHealth(ctx *cli.Context) error {
@@ -110,6 +117,10 @@ func (c *serverCLI) parseServerStartConfig(ctx *cli.Context) (*configs.ServerCon
 	var mp = map[string]interface{}{}
 	if ctx.Bool(readonlyFlag.Name) {
 		mp[readonlyFlag.Name] = true
+	}
+
+	if ctx.Bool(debugFlag.Name) {
+		mp[debugFlag.Name] = true
 	}
 
 	conf, err := configs.ReadFile(filePath, mp)

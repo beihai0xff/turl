@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/time/rate"
 
@@ -20,6 +21,13 @@ const HealthCheckPath = "/healthcheck"
 // NewServer creates a new HTTP server.
 func NewServer(h *Handler, c *configs.ServerConfig) (*http.Server, error) {
 	router := gin.New()
+	router.UseH2C = true
+
+	if c.Debug {
+		// register pprof router
+		pprof.Register(router, "api/debug/pprof")
+	}
+
 	router.Use(middleware.Logger(), middleware.HealthCheck(HealthCheckPath))
 
 	router.Use(gin.Recovery()) // recover from any panics, should be the last middleware
@@ -36,8 +44,8 @@ func NewServer(h *Handler, c *configs.ServerConfig) (*http.Server, error) {
 	return &http.Server{
 		Addr:              fmt.Sprintf("%s:%d", c.Listen, c.Port),
 		Handler:           http.TimeoutHandler(router.Handler(), c.RequestTimeout, "request timeout"),
-		ReadHeaderTimeout: time.Second,
-		ReadTimeout:       time.Second,
-		WriteTimeout:      time.Second,
+		ReadHeaderTimeout: c.RequestTimeout,
+		ReadTimeout:       c.RequestTimeout,
+		WriteTimeout:      c.RequestTimeout,
 	}, nil
 }
