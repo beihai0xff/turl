@@ -4,13 +4,13 @@ domain: "http://localhost"
 readonly: false
 request_timeout: "5s"
 global_rate_limit_key: "turl_rate_limit"
-global_write_rate: 100
-global_write_burst: 200
-stand_alone_read_rate: 10000
-stand_alone_read_burst: 500
+global_write_rate: 10000
+global_write_burst: 4000
+stand_alone_read_rate: 20000
+stand_alone_read_burst: 1000
 log:
   writers: ["console", "file"]
-  level: "info"
+  level: "error"
   format: "text"
   file_config:
     filepath: "/var/log/turl.log"
@@ -23,10 +23,13 @@ tddl:
   seq_name: "turl"
 mysql:
   dsn: "root:test123@tcp(mysql:3306)/turl?charset=utf8mb4&parseTime=True&loc=Local"
+  max_conn: 25
 cache:
   redis:
     addr: ["redis:6379"]
     dial_timeout: "5s"
+    max_conn: 25
+    ttl: 1800s
   remote_cache_ttl: 1800s
   local_cache:
     ttl: 600s

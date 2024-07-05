@@ -29,11 +29,16 @@ func TestServerConfig_Validate(t *testing.T) {
 			StartNum: 10,
 		},
 		MySQL: &MySQLConfig{
-			DSN: "test",
+			DSN:     "test",
+			MaxConn: 10,
 		},
 		Cache: &CacheConfig{
-			Redis:          nil,
-			RemoteCacheTTL: time.Second,
+			Redis: &RedisConfig{
+				Addr:        []string{"localhost:6379"},
+				DialTimeout: time.Second,
+				MaxConn:     10,
+				TTL:         10 * time.Minute,
+			},
 			LocalCache: &LocalCacheConfig{
 				TTL:       time.Second,
 				Capacity:  100000,
