@@ -24,7 +24,7 @@ Tiny-URL 短链接服务
 - [x] URL 编码：支持 Base58 编码；
 - [x] 限流器：支持 Redis 与单机令牌桶限流器；
 - [x] 读写分离：只读/只写/读写模式运行；
-- [ ] 幂等：同一 URL 多次生成，需要保证生成的短链接是唯一的
+- [x] 幂等：同一 URL 多次生成，需要保证生成的短链接是唯一的；
 - [ ] 过期时间：支持短链接过期时间；
 - [ ] 可观测：API 访问数据数据、服务监控；
 
@@ -97,3 +97,12 @@ curl -L http://localhost/24rgcX
   * 数据库读写请求数：平均每秒 116qps 的写入操作与读取操作，峰值 1k/qps 的写入操作与读取操作；
   * 缓存服务器内存空间：总共需要 50GB 内存空间，缓存约 1亿条数据；
   * 本地缓存存储空间：每台 Server 节点需要 500MB 内存空间用于本地缓存，缓存约 1M 条数据；
+
+## 更多设计细节
+
+* [短链接服务系统设计](docs/system-design.md)
+* [Base58 编码算法](docs/base58-design.md)
+* [分布式 ID 生成器](docs/tddl-design.md)
+* [限流器设计](docs/rate-limiter-design.md)
+* [API 性能测试](docs/api-benchmark.md)
+* [数据库表结构](docs/ddl)

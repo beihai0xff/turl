@@ -45,6 +45,7 @@ func Logger() gin.HandlerFunc {
 func RateLimiter(limiter workqueue.RateLimiter[any]) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if !limiter.Take(c, c.Request.RemoteAddr) {
+			slog.Warn("rate limit exceeded", slog.String("ip", c.ClientIP()))
 			c.AbortWithStatus(http.StatusTooManyRequests)
 		} else {
 			c.Next()

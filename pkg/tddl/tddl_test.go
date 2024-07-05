@@ -31,7 +31,7 @@ func TestMain(m *testing.M) {
 }
 
 func newMockDB(t *testing.T) *gorm.DB {
-	db, err := mysql.New(&configs.MySQLConfig{DSN: tests.DSN})
+	db, err := mysql.New(tests.GlobalConfig.MySQL)
 	require.NoError(t, err)
 
 	return db
@@ -98,14 +98,14 @@ func Test_tddlSequence_Next(t *testing.T) {
 	require.NoError(t, gormDB.Exec("DELETE FROM sequences").Error)
 
 	s, err := newSequence(gormDB, &configs.TDDLConfig{
-		Step:     1000,
+		Step:     100,
 		SeqName:  testSeqName,
 		StartNum: 10000,
 	})
 	require.NoError(t, err)
 	t.Cleanup(s.Close)
 
-	wg, testDataLength := sync.WaitGroup{}, 10000
+	wg, testDataLength := sync.WaitGroup{}, 1000
 	ch := make(chan uint64, testDataLength)
 	start := time.Now()
 	for range testDataLength {

@@ -33,6 +33,17 @@ func TestService_Create(t *testing.T) {
 		require.Error(t, err)
 		require.Nil(t, short)
 	})
+
+	t.Run("CreateExistingURL", func(t *testing.T) {
+		short, err := turl.Create(context.Background(), []byte("https://www.CreateExistingURL.com"))
+		require.NoError(t, err)
+		require.NotNil(t, short)
+
+		short2, err := turl.Create(context.Background(), []byte("https://www.CreateExistingURL.com"))
+		require.NoError(t, err)
+		require.NotNil(t, short2)
+		require.Equal(t, short, short2)
+	})
 }
 
 func TestService_Retrieve(t *testing.T) {
@@ -128,7 +139,7 @@ func TestService_Retrieve_failed(t *testing.T) {
 
 	t.Run("GetFailedToGetFromStorage", func(t *testing.T) {
 		mockCache.EXPECT().Get(mock.Anything, mock.Anything).Return(nil, cache.ErrCacheMiss).Times(1)
-		mockStorage.EXPECT().GetTinyURLByID(mock.Anything, uint64(38068692543)).Return(nil, testErr).Times(1)
+		mockStorage.EXPECT().GetByShortID(mock.Anything, uint64(38068692543)).Return(nil, testErr).Times(1)
 
 		got, err := turl.Retrieve(context.Background(), []byte("zzzzzz"))
 		require.ErrorIs(t, err, testErr)
@@ -137,7 +148,7 @@ func TestService_Retrieve_failed(t *testing.T) {
 
 	t.Run("RetrieveFailedToSetCache", func(t *testing.T) {
 		mockCache.EXPECT().Get(mock.Anything, "zzzzzz").Return(nil, cache.ErrCacheMiss).Times(1)
-		mockStorage.EXPECT().GetTinyURLByID(mock.Anything, uint64(38068692543)).Return(&storage.TinyURL{LongURL: []byte("https://www.example.com")}, nil).Times(1)
+		mockStorage.EXPECT().GetByShortID(mock.Anything, uint64(38068692543)).Return(&storage.TinyURL{LongURL: []byte("https://www.example.com")}, nil).Times(1)
 		mockCache.EXPECT().Set(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(testErr).Times(1)
 
 		got, err := turl.Retrieve(context.Background(), []byte("zzzzzz"))

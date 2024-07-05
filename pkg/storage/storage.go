@@ -14,8 +14,10 @@ var _ Storage = (*storage)(nil)
 type Storage interface {
 	// Insert adds a new TinyURL record to the storage.
 	Insert(ctx context.Context, short uint64, longURL []byte) error
-	// GetTinyURLByID retrieves a TinyURL record by its ID.
-	GetTinyURLByID(ctx context.Context, short uint64) (*TinyURL, error)
+	// GetByLongURL retrieves a TinyURL record by its original URL.
+	GetByLongURL(ctx context.Context, long []byte) (*TinyURL, error)
+	// GetByShortID retrieves a TinyURL record by its short ID.
+	GetByShortID(ctx context.Context, short uint64) (*TinyURL, error)
 	// Close closes the storage.
 	Close() error
 }
@@ -23,8 +25,8 @@ type Storage interface {
 // TinyURL represents a shortened URL record.
 type TinyURL struct {
 	gorm.Model
-	LongURL []byte `gorm:"type:VARCHAR(500);not null" json:"long_url"` // The original URL.
-	Short   uint64 `gorm:"type:BIGINT;index;not null" json:"short"`    // The shortened URL ID.
+	LongURL []byte `gorm:"type:VARCHAR(500);uniqueIndex;not null" json:"long_url"` // The original URL.
+	Short   uint64 `gorm:"type:BIGINT;uniqueIndex;not null" json:"short"`          // The shortened URL ID.
 }
 
 // TableName returns the table name of the TinyURL model.
@@ -60,11 +62,24 @@ func (s *storage) Insert(ctx context.Context, short uint64, long []byte) error {
 	return s.db.WithContext(ctx).Create(&t).Error
 }
 
-// GetTinyURLByID retrieves a TinyURL record by its ID.
-func (s *storage) GetTinyURLByID(ctx context.Context, short uint64) (*TinyURL, error) {
+// GetByShortID retrieves a TinyURL record by its short ID.
+func (s *storage) GetByShortID(ctx context.Context, short uint64) (*TinyURL, error) {
 	t := TinyURL{}
 	// Query the database for the record.
 	res := s.db.WithContext(ctx).Where("short = ?", short).Take(&t)
+
+	if res.Error != nil {
+		return nil, res.Error
+	}
+
+	return &t, nil
+}
+
+// GetByLongURL retrieves a TinyURL record by its original URL.
+func (s *storage) GetByLongURL(ctx context.Context, long []byte) (*TinyURL, error) {
+	t := TinyURL{}
+	// Query the database for the record.
+	res := s.db.WithContext(ctx).Where("long_url = ?", long).Take(&t)
 
 	if res.Error != nil {
 		return nil, res.Error

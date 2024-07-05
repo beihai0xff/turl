@@ -26,6 +26,7 @@ func New(c *configs.MySQLConfig) (*gorm.DB, error) {
 	db, err := gorm.Open(mysql.Open(c.DSN), &gorm.Config{
 		Logger:                 logger.Default,
 		SkipDefaultTransaction: true,
+		TranslateError:         true,
 	})
 	if err != nil {
 		return nil, err

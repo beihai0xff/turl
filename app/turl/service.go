@@ -139,11 +139,22 @@ func (c *commandService) Create(ctx context.Context, long []byte) ([]byte, error
 	}
 
 	if err = c.db.Insert(ctx, seq, long); err != nil {
-		return nil, fmt.Errorf("failed to insert into db: %w", err)
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			slog.Error(fmt.Sprintf("failed to insert into db: %v, try to get from db", err),
+				slog.Any("long url", long), slog.Int64("seq", int64(seq)))
+
+			record, err := c.db.GetByLongURL(ctx, long)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get from db: %w", err)
+			}
+
+			seq = record.Short
+		} else {
+			return nil, fmt.Errorf("failed to insert into db: %w", err)
+		}
 	}
 
 	short := mapping.Base58Encode(seq)
-
 	// set local cache and distributed cache, if failed, just log the error, not return err
 	if err = c.cache.Set(ctx, string(short), long, c.ttl); err != nil {
 		slog.ErrorContext(ctx, "failed to set cache", slog.Any("error", err))
@@ -200,7 +211,7 @@ func (q *queryService) Retrieve(ctx context.Context, short []byte) ([]byte, erro
 	}()
 
 	// try to get from db
-	res, err := q.db.GetTinyURLByID(ctx, seq)
+	res, err := q.db.GetByShortID(ctx, seq)
 	if err != nil {
 		return nil, err
 	}
