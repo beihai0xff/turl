@@ -145,3 +145,21 @@ func TestService_Retrieve_failed(t *testing.T) {
 		require.Equal(t, []byte("https://www.example.com"), got)
 	})
 }
+
+func Test_getDB(t *testing.T) {
+	t.Run("GetDBSuccess", func(t *testing.T) {
+		_, err := getDB(tests.GlobalConfig)
+		require.NoError(t, err)
+	})
+	t.Run("GetDBDebug", func(t *testing.T) {
+		tests.GlobalConfig.Debug = true
+		_, err := getDB(tests.GlobalConfig)
+		require.NoError(t, err)
+	})
+
+	t.Run("GetDBFailed", func(t *testing.T) {
+		tests.GlobalConfig.MySQL.DSN = "invalid_dsn"
+		_, err := getDB(tests.GlobalConfig)
+		require.Error(t, err)
+	})
+}
