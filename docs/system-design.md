@@ -56,28 +56,9 @@
 
 短链接服务需要存储短链接与长链接的映射关系，可以选择关系型数据库、NoSQL 数据库等，turl 首要支持 MySQL 等关系型数据库，未来考虑支持 MongoDB 等 NoSQL 数据库。
 
-MySQL 数据库表设计如下：
-
-```sql
-create table turl.tiny_urls
-(
-    id         bigint unsigned auto_increment
-        primary key,
-    created_at datetime(3)  null,
-    updated_at datetime(3)  null,
-    deleted_at datetime(3)  null,
-    long_url   varchar(500) not null,
-    short      bigint       not null
-);
-
-create index idx_tiny_urls_deleted_at
-    on turl.tiny_urls (deleted_at);
-
-create index idx_tiny_urls_short
-    on turl.tiny_urls (short);
+MySQL 数据库表结构可参考 [docs/ddl/tiny_urls.sql](../ddl/tiny_urls.sql)。
 
 
-```
 
 
 
