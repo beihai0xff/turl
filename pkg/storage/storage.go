@@ -13,7 +13,7 @@ var _ Storage = (*storage)(nil)
 // Storage is an interface that defines the methods that a storage system must implement.
 type Storage interface {
 	// Insert adds a new TinyURL record to the storage.
-	Insert(ctx context.Context, short uint64, longURL []byte) error
+	Insert(ctx context.Context, short uint64, longURL []byte) (*TinyURL, error)
 	// GetByLongURL retrieves a TinyURL record by its original URL.
 	GetByLongURL(ctx context.Context, long []byte) (*TinyURL, error)
 	// GetByShortID retrieves a TinyURL record by its short ID.
@@ -52,14 +52,18 @@ func newStorage(db *gorm.DB) *storage {
 }
 
 // Insert adds a new TinyURL record to the storage.
-func (s *storage) Insert(ctx context.Context, short uint64, long []byte) error {
+func (s *storage) Insert(ctx context.Context, short uint64, long []byte) (*TinyURL, error) {
 	t := TinyURL{
 		Short:   short,
 		LongURL: long,
 	}
 
 	// Create a new record in the database.
-	return s.db.WithContext(ctx).Create(&t).Error
+	if err := s.db.WithContext(ctx).Create(&t).Error; err != nil {
+		return nil, err
+	}
+
+	return &t, nil
 }
 
 // GetByShortID retrieves a TinyURL record by its short ID.

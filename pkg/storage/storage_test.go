@@ -51,15 +51,23 @@ func Test_storage_Insert(t *testing.T) {
 	t.Cleanup(func() { s.Close() })
 
 	t.Run("Insert", func(t *testing.T) {
-		require.NoError(t, s.Insert(ctx, uint64(20000), long))
+		got, err := s.Insert(ctx, uint64(10000), long)
+		require.NoError(t, err)
+		require.Equal(t, long, got.LongURL)
+		require.Equal(t, 10000, int(got.Short))
+		require.Greater(t, got.CreatedAt.Unix(), int64(0))
 	})
 
 	t.Run("InsertDuplicateURL", func(t *testing.T) {
-		require.ErrorIs(t, s.Insert(ctx, uint64(30000), long), gorm.ErrDuplicatedKey)
+		got, err := s.Insert(ctx, uint64(30000), long)
+		require.ErrorIs(t, err, gorm.ErrDuplicatedKey)
+		require.Nil(t, got)
 	})
 
 	t.Run("InsertDuplicateShort", func(t *testing.T) {
-		require.ErrorIs(t, s.Insert(ctx, uint64(20000), []byte("www.InsertDuplicateShort.com")), gorm.ErrDuplicatedKey)
+		got, err := s.Insert(ctx, uint64(10000), []byte("www.InsertDuplicateShort.com"))
+		require.ErrorIs(t, err, gorm.ErrDuplicatedKey)
+		require.Nil(t, got)
 	})
 }
 
@@ -70,8 +78,10 @@ func Test_storage_GetTinyURLByID(t *testing.T) {
 	s, ctx := newStorage(db), context.Background()
 	t.Cleanup(func() { s.Close() })
 
-	require.NoError(t, s.Insert(ctx, short, long))
-	got, err := s.GetByShortID(ctx, short)
+	got, err := s.Insert(ctx, short, long)
+	require.NoError(t, err)
+	require.NotNil(t, got)
+	got, err = s.GetByShortID(ctx, short)
 	require.NoError(t, err)
 	require.Equal(t, long, got.LongURL)
 
@@ -87,7 +97,8 @@ func Test_storage_GetByLongURL(t *testing.T) {
 	t.Cleanup(func() { s.Close() })
 
 	t.Run("GetByLongURL", func(t *testing.T) {
-		require.NoError(t, s.Insert(ctx, uint64(50000), long))
+		_, err := s.Insert(ctx, uint64(50000), long)
+		require.NoError(t, err)
 
 		got, err := s.GetByLongURL(ctx, long)
 		require.NoError(t, err)

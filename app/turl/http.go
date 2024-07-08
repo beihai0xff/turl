@@ -39,6 +39,7 @@ func NewServer(h *Handler, c *configs.ServerConfig) (*http.Server, error) {
 		api := router.Group("/api").Use(middleware.RateLimiter(
 			workqueue.NewItemRedisTokenRateLimiter[any](rdb, c.GlobalRateLimitKey, c.GlobalWriteRate, c.GlobalWriteBurst, time.Second)))
 		api.POST("/shorten", h.Create)
+		api.GET("/shorten", h.GetShortenInfo)
 	}
 
 	return &http.Server{

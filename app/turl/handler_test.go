@@ -6,12 +6,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
+	"github.com/beihai0xff/turl/app/turl/model"
 	"github.com/beihai0xff/turl/internal/tests/mocks"
 	"github.com/beihai0xff/turl/pkg/mapping"
 )
@@ -28,12 +30,17 @@ func TestHandler_Create(t *testing.T) {
 		req.Header.Set("Content-Type", "application/json")
 		resp := httptest.NewRecorder()
 
-		mockService.EXPECT().Create(mock.Anything, mock.Anything).Return([]byte("abc123"), nil).Times(1)
+		mockService.EXPECT().Create(mock.Anything, mock.Anything).Return(&model.TinyURL{
+			ShortURL:  "abcefg",
+			LongURL:   "https://www.example.com",
+			CreatedAt: time.Now(),
+		}, nil).Times(1)
 
 		router.ServeHTTP(resp, req)
 
 		require.Equal(t, http.StatusOK, resp.Code)
-		require.Equal(t, `{"short_url":"https://www.example.com/abc123","long_url":"https://www.example.com","error":""}`, resp.Body.String())
+		require.Contains(t, resp.Body.String(), `"short_url":"https://www.example.com/abcefg"`)
+		require.Contains(t, resp.Body.String(), `"long_url":"https://www.example.com"`)
 	})
 
 	t.Run("CreateInvalidURL", func(t *testing.T) {

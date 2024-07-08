@@ -48,6 +48,9 @@ make deploy
 
 ```shell
 curl -X POST http://localhost:8080/api/shorten -H 'Content-Type: application/json' -d '{"long_url": "https://google.com"}'
+```
+返回结果：
+```json
 {"short_url":"http://localhost/24rgcX","long_url":"https://google.com","error":""}
 ```
 
