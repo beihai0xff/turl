@@ -10,6 +10,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/beihai0xff/turl/app/turl/model"
 	"github.com/beihai0xff/turl/configs"
 	"github.com/beihai0xff/turl/pkg/cache"
 	"github.com/beihai0xff/turl/pkg/db/mysql"
@@ -21,7 +22,8 @@ import (
 
 // Service represents the tiny URL service interface.
 type Service interface {
-	Create(ctx context.Context, long []byte) ([]byte, error)
+	Create(ctx context.Context, long []byte) (*model.TinyURL, error)
+	GetByLong(ctx context.Context, long []byte) (*model.TinyURL, error)
 	Retrieve(ctx context.Context, short []byte) ([]byte, error)
 	Close() error
 }
@@ -128,7 +130,7 @@ type commandService struct {
 }
 
 // Create creates a new tiny URL.
-func (c *commandService) Create(ctx context.Context, long []byte) ([]byte, error) {
+func (c *commandService) Create(ctx context.Context, long []byte) (*model.TinyURL, error) {
 	if err := validate.Instance().VarCtx(ctx, string(long), "required,http_url"); err != nil {
 		return nil, err
 	}
@@ -138,12 +140,13 @@ func (c *commandService) Create(ctx context.Context, long []byte) ([]byte, error
 		return nil, fmt.Errorf("failed to generate sequence: %w", err)
 	}
 
-	if err = c.db.Insert(ctx, seq, long); err != nil {
+	record, err := c.db.Insert(ctx, seq, long)
+	if err != nil {
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
 			slog.Error(fmt.Sprintf("failed to insert into db: %v, try to get from db", err),
 				slog.Any("long url", long), slog.Int64("seq", int64(seq)))
 
-			record, err := c.db.GetByLongURL(ctx, long)
+			record, err = c.db.GetByLongURL(ctx, long)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get from db: %w", err)
 			}
@@ -160,7 +163,12 @@ func (c *commandService) Create(ctx context.Context, long []byte) ([]byte, error
 		slog.ErrorContext(ctx, "failed to set cache", slog.Any("error", err))
 	}
 
-	return short, nil
+	return &model.TinyURL{
+		ShortURL:  string(short),
+		LongURL:   string(long),
+		CreatedAt: record.CreatedAt,
+		DeletedAt: record.DeletedAt,
+	}, nil
 }
 
 // Close closes the command service.
@@ -219,6 +227,25 @@ func (q *queryService) Retrieve(ctx context.Context, short []byte) ([]byte, erro
 	long = res.LongURL
 
 	return long, nil
+}
+
+// GetByLong returns the tiny URL by the long URL.
+func (q *queryService) GetByLong(ctx context.Context, long []byte) (*model.TinyURL, error) {
+	if err := validate.Instance().VarCtx(ctx, string(long), "required,http_url"); err != nil {
+		return nil, err
+	}
+
+	record, err := q.db.GetByLongURL(ctx, long)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.TinyURL{
+		ShortURL:  string(mapping.Base58Encode(record.Short)),
+		LongURL:   string(record.LongURL),
+		CreatedAt: record.CreatedAt,
+		DeletedAt: record.DeletedAt,
+	}, nil
 }
 
 // Close closes the command service.

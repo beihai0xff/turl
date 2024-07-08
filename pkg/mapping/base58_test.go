@@ -17,6 +17,8 @@ func TestBase58Encode(t *testing.T) {
 
 	t.Run("EncodePositiveNumber", func(t *testing.T) {
 		require.Equal(t, "BukQL", string(Base58Encode(123456789)))
+		require.Equal(t, "24rgcX", string(Base58Encode(700000000)))
+		require.Equal(t, "24rgcY", string(Base58Encode(700000001)))
 	})
 
 	t.Run("EncodeLargeNumber", func(t *testing.T) {

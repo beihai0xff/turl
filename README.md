@@ -48,7 +48,10 @@ make deploy
 
 ```shell
 curl -X POST http://localhost:8080/api/shorten -H 'Content-Type: application/json' -d '{"long_url": "https://google.com"}'
-{"short_url":"http://localhost/24rgcX","long_url":"https://google.com","error":""}
+```
+返回结果：
+```json
+{"short_url":"http://localhost/24rgcX","long_url":"https://google.com","created_at":"2024-07-08T15:06:26.434Z","deleted_at":null,"error":""}
 ```
 
 ### 访问短链接
@@ -58,6 +61,18 @@ curl -X POST http://localhost:8080/api/shorten -H 'Content-Type: application/jso
 ```shell
 curl -L http://localhost/24rgcX
 ```
+
+### 获取长链接信息
+
+```shell
+curl -X GET http://localhost:8080/api/shorten\?long_url\=https://google.com
+```
+
+返回结果：
+```json
+{"short_url":"http://localhost/24rgcX","long_url":"https://google.com","created_at":"2024-07-08T15:06:26.434Z","deleted_at":null,"error":""}
+```
+
 
 # 短链接服务系统设计
 

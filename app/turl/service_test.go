@@ -54,9 +54,9 @@ func TestService_Retrieve(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("RetrieveExistingURL", func(t *testing.T) {
-		short, err := turl.Create(context.Background(), []byte("https://www.example.com"))
+		record, err := turl.Create(context.Background(), []byte("https://www.example.com"))
 		require.NoError(t, err)
-		got, err := turl.Retrieve(context.Background(), short)
+		got, err := turl.Retrieve(context.Background(), []byte(record.ShortURL))
 		require.NoError(t, err)
 		require.Equal(t, []byte("https://www.example.com"), got)
 	})
@@ -98,14 +98,21 @@ func TestService_Create_failed(t *testing.T) {
 
 	t.Run("CreateFailedToInsertIntoDB", func(t *testing.T) {
 		mockTDDL.EXPECT().Next(mock.Anything).Return(uint64(1), nil).Times(1)
-		mockStorage.EXPECT().Insert(mock.Anything, uint64(1), []byte("https://www.example.com")).Return(testErr).Times(1)
+		mockStorage.EXPECT().Insert(mock.Anything, uint64(1), []byte("https://www.example.com")).Return(nil, testErr).Times(1)
 		_, err := turl.Create(context.Background(), []byte("https://www.example.com"))
 		require.ErrorIs(t, err, testErr)
 	})
 
 	t.Run("CreateFailedToSetCache", func(t *testing.T) {
 		mockTDDL.EXPECT().Next(mock.Anything).Return(uint64(1), nil).Times(1)
-		mockStorage.EXPECT().Insert(mock.Anything, uint64(1), []byte("https://www.example.com")).Return(nil)
+		mockStorage.EXPECT().Insert(mock.Anything, uint64(1), []byte("https://www.example.com")).Return(&storage.TinyURL{
+			Short:   1e7,
+			LongURL: []byte("https://www.example.com"),
+			Model: gorm.Model{
+				ID:        10,
+				CreatedAt: time.Now(),
+			},
+		}, nil)
 		mockCache.EXPECT().Set(mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(testErr).Times(1)
 		_, err := turl.Create(context.Background(), []byte("https://www.example.com"))
 		require.NoError(t, err)
@@ -157,20 +164,45 @@ func TestService_Retrieve_failed(t *testing.T) {
 	})
 }
 
+func Test_queryService_GetByLong(t *testing.T) {
+	s, err := newService(tests.GlobalConfig)
+	require.NoError(t, err)
+
+	t.Run("GetByLongSuccess", func(t *testing.T) {
+		record, err := s.Create(context.Background(), []byte("https://www.queryService_GetByLong.com"))
+		require.NoError(t, err)
+
+		got, err := s.GetByLong(context.Background(), []byte("https://www.queryService_GetByLong.com"))
+		require.NoError(t, err)
+		require.Equal(t, record.ShortURL, got.ShortURL)
+	})
+
+	t.Run("GetByLongNon-Existed", func(t *testing.T) {
+		got, err := s.GetByLong(context.Background(), nil)
+		require.Error(t, err)
+		got, err = s.GetByLong(context.Background(), []byte("example.com"))
+		require.Error(t, err)
+		got, err = s.GetByLong(context.Background(), []byte("https://www.Non-Existed.com"))
+		require.ErrorIs(t, err, gorm.ErrRecordNotFound)
+		require.Nil(t, got)
+	})
+}
+
 func Test_getDB(t *testing.T) {
+	c := *tests.GlobalConfig
 	t.Run("GetDBSuccess", func(t *testing.T) {
-		_, err := getDB(tests.GlobalConfig)
+		_, err := getDB(&c)
 		require.NoError(t, err)
 	})
 	t.Run("GetDBDebug", func(t *testing.T) {
-		tests.GlobalConfig.Debug = true
-		_, err := getDB(tests.GlobalConfig)
+		c.Debug = true
+		_, err := getDB(&c)
 		require.NoError(t, err)
 	})
 
 	t.Run("GetDBFailed", func(t *testing.T) {
-		tests.GlobalConfig.MySQL.DSN = "invalid_dsn"
-		_, err := getDB(tests.GlobalConfig)
+		c.MySQL.DSN = "invalid_dsn"
+		_, err := getDB(&c)
 		require.Error(t, err)
 	})
 }
