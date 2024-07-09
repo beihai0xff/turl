@@ -116,7 +116,7 @@ func Test_storage_GetByLongURL(t *testing.T) {
 func Test_storage_Delete(t *testing.T) {
 	db, _ := mysql.New(tests.GlobalConfig.MySQL)
 
-	long := []byte("www.GetByLongURL.com")
+	long := []byte("www.storage_Delete.com")
 	s, ctx := newStorage(db), context.Background()
 	t.Cleanup(func() { s.Close() })
 
