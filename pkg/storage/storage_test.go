@@ -112,3 +112,28 @@ func Test_storage_GetByLongURL(t *testing.T) {
 		require.Nil(t, got)
 	})
 }
+
+func Test_storage_Delete(t *testing.T) {
+	db, _ := mysql.New(tests.GlobalConfig.MySQL)
+
+	long := []byte("www.storage_Delete.com")
+	s, ctx := newStorage(db), context.Background()
+	t.Cleanup(func() { s.Close() })
+
+	t.Run("Delete", func(t *testing.T) {
+		_, err := s.Insert(ctx, uint64(60000), long)
+		require.NoError(t, err)
+
+		err = s.Delete(ctx, uint64(60000))
+		require.NoError(t, err)
+
+		got, err := s.GetByShortID(ctx, uint64(60000))
+		require.ErrorIs(t, err, gorm.ErrRecordNotFound)
+		require.Nil(t, got)
+	})
+
+	t.Run("DeleteNotFound", func(t *testing.T) {
+		err := s.Delete(ctx, uint64(60000))
+		require.ErrorIs(t, err, gorm.ErrRecordNotFound)
+	})
+}

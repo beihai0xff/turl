@@ -18,6 +18,8 @@ type Storage interface {
 	GetByLongURL(ctx context.Context, long []byte) (*TinyURL, error)
 	// GetByShortID retrieves a TinyURL record by its short ID.
 	GetByShortID(ctx context.Context, short uint64) (*TinyURL, error)
+	// Delete a short link by short id
+	Delete(ctx context.Context, short uint64) error
 	// Close closes the storage.
 	Close() error
 }
@@ -90,6 +92,21 @@ func (s *storage) GetByLongURL(ctx context.Context, long []byte) (*TinyURL, erro
 	}
 
 	return &t, nil
+}
+
+// Delete a short link by short id
+func (s *storage) Delete(ctx context.Context, short uint64) error {
+	res := s.db.WithContext(ctx).Where("short = ?", short).Delete(&TinyURL{})
+
+	if res.Error != nil {
+		return res.Error
+	}
+
+	if res.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
 }
 
 // Close closes the storage.
