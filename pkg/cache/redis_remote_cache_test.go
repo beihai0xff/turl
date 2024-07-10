@@ -51,3 +51,27 @@ func Test_redisCache_Get(t *testing.T) {
 	require.ErrorIs(t, err, ErrCacheMiss)
 	require.Nil(t, got)
 }
+
+func Test_redisCache_Del(t *testing.T) {
+	c := newRedisCache(tests.GlobalConfig.Cache.Redis)
+	t.Cleanup(
+		func() {
+			c.Close()
+		})
+
+	k, v := "key", []byte("value")
+
+	t.Run("del", func(t *testing.T) {
+		require.NoError(t, c.Set(context.Background(), k, v, 10*time.Minute))
+
+		require.NoError(t, c.Del(context.Background(), k))
+
+		got, err := c.Get(context.Background(), k)
+		require.ErrorIs(t, err, ErrCacheMiss)
+		require.Nil(t, got)
+	})
+
+	t.Run("del_not_exist", func(t *testing.T) {
+		require.NoError(t, c.Del(context.Background(), "not_exist"), ErrCacheMiss)
+	})
+}

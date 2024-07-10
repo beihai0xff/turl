@@ -77,6 +77,18 @@ func (p *proxy) Get(ctx context.Context, k string) ([]byte, error) {
 	return long, err
 }
 
+func (p *proxy) Del(ctx context.Context, k string) error {
+	if err := p.distributedCache.Del(ctx, k); err != nil {
+		return fmt.Errorf("failed to delete distributed cache: %w", err)
+	}
+
+	if err := p.localCache.Del(ctx, k); err != nil {
+		return fmt.Errorf("failed to delete local cache: %w", err)
+	}
+
+	return nil
+}
+
 func (p *proxy) Close() error {
 	if err := p.distributedCache.Close(); err != nil {
 		return err

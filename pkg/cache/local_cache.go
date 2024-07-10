@@ -59,6 +59,19 @@ func (l *localCache) Get(_ context.Context, k string) ([]byte, error) {
 	return v, err
 }
 
+func (l *localCache) Del(_ context.Context, k string) error {
+	err := l.cache.Delete(k)
+	if err != nil {
+		if errors.Is(err, bigcache.ErrEntryNotFound) {
+			return nil
+		}
+
+		return err
+	}
+
+	return nil
+}
+
 // Close the cache
 func (l *localCache) Close() error {
 	return l.cache.Close()

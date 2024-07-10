@@ -49,6 +49,10 @@ func (c *redisCache) Get(ctx context.Context, k string) ([]byte, error) {
 	return value, err
 }
 
+func (c *redisCache) Del(ctx context.Context, k string) error {
+	return c.rdb.Del(ctx, k).Err()
+}
+
 // Close the cache
 func (c *redisCache) Close() error {
 	return c.rdb.Close()
