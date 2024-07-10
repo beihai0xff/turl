@@ -17,6 +17,8 @@ type Interface interface {
 	Set(ctx context.Context, k string, v []byte, ttl time.Duration) error
 	// Get the key value from cache
 	Get(ctx context.Context, k string) ([]byte, error)
+	// Del delete the key from cache
+	Del(ctx context.Context, k string) error
 	// Close the cache
 	Close() error
 }
