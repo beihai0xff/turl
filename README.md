@@ -41,7 +41,7 @@ make deploy
 该模式会部署 MySQL 与 Redis 服务，作为本地存储与缓存服务器。同时会启动两个服务节点，一个用于读写操作，另一个用于只读操作。
 - 读写服务：[http://localhost:8080](http://localhost:8080)，用于生成短链接、更新远程缓存、更新数据库等；
 - 只读服务：[http://localhost:80](http://localhost:80)，只用于访问短链接，不支持生成短链接，生产环境中可以部署多个只读服务节点，用于分流读取请求。
-
+- swagger：访问 [http://localhost:8080/api/swagger/index.html#/](http://localhost:8080/api/swagger/index.html#/) swagger 页面，
 ## API 接口
 
 ### 生成短链接

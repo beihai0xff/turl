@@ -17,4 +17,5 @@ cover.html
 
 .idea
 /build/dist/
+/docs/swagger
 /internal/tests/mocks/

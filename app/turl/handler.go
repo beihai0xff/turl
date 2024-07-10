@@ -32,7 +32,18 @@ func NewHandler(c *configs.ServerConfig) (*Handler, error) {
 	}, nil
 }
 
-// Create creates a new short URL from the long URL.
+// Create creates a new short URL from the long URL. godoc
+//
+//	@Summary		Create short link from long link
+//	@Description	Create short link from long link
+//	@Tags			command
+//	@Accept			json
+//	@Produce		json
+//	@Param			data	body		model.CreateRequest	true	"request body"
+//	@Success		200		{object}	model.ShortenResponse
+//	@Failure		400		{object}	model.ShortenResponse
+//	@Failure		500		{object}	model.ShortenResponse
+//	@Router			/shorten [post]
 func (h *Handler) Create(c *gin.Context) {
 	var req model.CreateRequest
 
@@ -52,7 +63,19 @@ func (h *Handler) Create(c *gin.Context) {
 	c.JSON(http.StatusOK, &model.ShortenResponse{TinyURL: *record})
 }
 
-// Redirect redirects the short URL to the original long URL temporarily if the short URL exists.
+// Redirect redirects the short URL to the original long URL temporarily if the short URL exists. godoc
+//
+//	@Summary		Redirect to the original long URL
+//	@Description	Redirect to the original long URL
+//	@Tags			query
+//	@Accept			json
+//	@Produce		json
+//	@Param			short	path		string	true	"short URL"
+//	@Success		302		{string}	string
+//	@Failure		400		{object}	model.ShortenResponse
+//	@Failure		404		{object}	model.ShortenResponse
+//	@Failure		500		{object}	model.ShortenResponse
+//	@Router			/:short [get]
 func (h *Handler) Redirect(c *gin.Context) {
 	short := []byte(c.Param("short"))
 	if len(short) > 8 || len(short) < 6 {
@@ -82,6 +105,17 @@ func (h *Handler) Redirect(c *gin.Context) {
 }
 
 // GetShortenInfo returns the original long URL of the short URL.
+//
+//	@Summary		Get the original long URL of the short URL
+//	@Description	Get the original long URL of the short URL
+//	@Tags			query
+//	@Accept			json
+//	@Produce		json
+//	@Param			long_url	query		string	true	"long URL"
+//	@Success		200			{object}	model.ShortenResponse
+//	@Failure		400			{object}	model.ShortenResponse
+//	@Failure		500			{object}	model.ShortenResponse
+//	@Router			/shorten [get]
 func (h *Handler) GetShortenInfo(c *gin.Context) {
 	var req model.CreateRequest
 
@@ -102,6 +136,18 @@ func (h *Handler) GetShortenInfo(c *gin.Context) {
 }
 
 // Delete deletes the short URL.
+//
+//	@Summary		Delete the short URL
+//	@Description	Delete the short URL
+//	@Tags			command
+//	@Accept			json
+//	@Produce		json
+//	@Param			data	body		model.ShortenRequest	true	"request body"
+//	@Success		200		{object}	model.ShortenResponse
+//	@Failure		400		{object}	model.ShortenResponse
+//	@Failure		404		{object}	model.ShortenResponse
+//	@Failure		500		{object}	model.ShortenResponse
+//	@Router			/shorten [delete]
 func (h *Handler) Delete(c *gin.Context) {
 	var req model.ShortenRequest
 
