@@ -17,8 +17,9 @@ endif
 bootstrap:
 	go mod download -x
 	go generate -tags tools tools/tools.go
-	make gen/mock
 	make gen/swagger
+	make gen/mock
+
 
 lint: gen/swagger
 	swag fmt -d app/turl
