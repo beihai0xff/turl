@@ -18,7 +18,8 @@ bootstrap:
 	go mod download -x
 	go generate -tags tools tools/tools.go
 
-lint:
+lint: gen/swagger
+	swag fmt -d app/turl
 	golangci-lint run -v
 
 gen/mock:
@@ -28,7 +29,7 @@ gen/struct_tag:
 	bash -x scripts/gen_configs_struct_tag.sh
 
 gen/swagger:
-	swag init --parseDependency --parseDepth 1 -g app/turl/server/http_controller.go -o docs/swagger
+	swag init --parseDependency --parseDepth 1 -d app/turl -g http.go -o docs/swagger
 
 test: bootstrap gen/mock
 	docker compose -f ./internal/tests/docker-compose.yaml up -d --wait
@@ -44,7 +45,7 @@ test: bootstrap gen/mock
 build: build/docker
 
 # build binary file
-build/binary: clean bootstrap
+build/binary: clean bootstrap gen/swagger
 	go build -tags=jsoniter -ldflags=$(ldflags) -o ./build/dist/binary/turl cmd/turl/main.go
 
 # docker: enable containerd for pulling and storing images
@@ -58,7 +59,7 @@ build/docker:
 		--build-arg GO_VERSION=$(GO_VERSION) \
 		--platform=$(BUILD_PLATFORMS) \
 		--output type=docker \
-		-t beihai0xff/turl:latest -t beihai0xff/turl:$(TAG_VERSION) .
+		-t beihai0xff/turl:$(TAG_VERSION) -t beihai0xff/turl:latest .
 
 build/docker_and_push:
 	DOCKER_BUILDKIT=1 docker buildx build \
@@ -70,7 +71,7 @@ build/docker_and_push:
 		--build-arg GO_VERSION=$(GO_VERSION) \
 		--platform=$(BUILD_PLATFORMS) \
 		--push \
-		-t beihai0xff/turl:latest -t beihai0xff/turl:$(TAG_VERSION) .
+		-t beihai0xff/turl:$(TAG_VERSION) -t beihai0xff/turl:latest .
 
 .PHONY: build build/binary build/docker build/docker_and_push
 
