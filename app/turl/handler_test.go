@@ -103,3 +103,71 @@ func TestHandler_Redirect(t *testing.T) {
 		require.Equal(t, http.StatusBadRequest, resp.Code)
 	})
 }
+
+func TestHandler_Delete(t *testing.T) {
+	mockService := mocks.NewMockTURLService(t)
+	h := &Handler{s: mockService}
+
+	router := gin.Default()
+	router.DELETE("/delete", h.Delete)
+
+	t.Run("DeleteSuccess", func(t *testing.T) {
+		mockService.EXPECT().Delete(mock.Anything, []byte("abc123")).Return(nil).Times(1)
+
+		req := httptest.NewRequest(http.MethodDelete, "/delete", bytes.NewBuffer([]byte(`{"short_url":"abc123"}`)))
+		req.Header.Set("Content-Type", "application/json")
+		resp := httptest.NewRecorder()
+		router.ServeHTTP(resp, req)
+		require.Equal(t, http.StatusOK, resp.Code)
+	})
+
+	t.Run("DeleteInvalidURL", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodDelete, "/delete", nil)
+		req.Header.Set("Content-Type", "application/json")
+		req.Body = http.NoBody
+		resp := httptest.NewRecorder()
+		router.ServeHTTP(resp, req)
+		require.Equal(t, http.StatusBadRequest, resp.Code)
+	})
+
+	t.Run("DeleteFailed", func(t *testing.T) {
+		testErr := errors.New("test error")
+		mockService.EXPECT().Delete(mock.Anything, []byte("abc123")).Return(testErr).Times(1)
+
+		req := httptest.NewRequest(http.MethodDelete, "/delete", bytes.NewBuffer([]byte(`{"short_url":"abc123"}`)))
+		req.Header.Set("Content-Type", "application/json")
+		resp := httptest.NewRecorder()
+		router.ServeHTTP(resp, req)
+		require.Equal(t, http.StatusInternalServerError, resp.Code)
+	})
+
+	t.Run("DeleteFailedToDecodeShortURL", func(t *testing.T) {
+		mockService.EXPECT().Delete(mock.Anything, []byte("invalid_short_url")).Return(mapping.ErrorInvalidCharacter).Times(1)
+		req := httptest.NewRequest(http.MethodDelete, "/delete", bytes.NewBuffer([]byte(`{"short_url":"invalid_short_url"}`)))
+		req.Header.Set("Content-Type", "application/json")
+		resp := httptest.NewRecorder()
+		router.ServeHTTP(resp, req)
+		require.Equal(t, http.StatusBadRequest, resp.Code)
+	})
+
+	t.Run("DeleteFailedRecordNotFound", func(t *testing.T) {
+		mockService.EXPECT().Delete(mock.Anything, []byte("abc321")).Return(gorm.ErrRecordNotFound).Times(1)
+
+		req := httptest.NewRequest(http.MethodDelete, "/delete", bytes.NewBuffer([]byte(`{"short_url":"abc321"}`)))
+		req.Header.Set("Content-Type", "application/json")
+		resp := httptest.NewRecorder()
+		router.ServeHTTP(resp, req)
+		require.Equal(t, http.StatusNotFound, resp.Code)
+	})
+
+	testError := errors.New("test error")
+	t.Run("DeleteFailedToDeleteFromStorage", func(t *testing.T) {
+		mockService.EXPECT().Delete(mock.Anything, []byte("abc123")).Return(testError).Times(1)
+
+		req := httptest.NewRequest(http.MethodDelete, "/delete", bytes.NewBuffer([]byte(`{"short_url":"abc123"}`)))
+		req.Header.Set("Content-Type", "application/json")
+		resp := httptest.NewRecorder()
+		router.ServeHTTP(resp, req)
+		require.Equal(t, http.StatusInternalServerError, resp.Code)
+	})
+}

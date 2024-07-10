@@ -18,6 +18,25 @@ import (
 	"github.com/beihai0xff/turl/pkg/tddl"
 )
 
+func Test_getDB(t *testing.T) {
+	c := *tests.GlobalConfig
+	t.Run("GetDBSuccess", func(t *testing.T) {
+		_, err := getDB(&c)
+		require.NoError(t, err)
+	})
+	t.Run("GetDBDebug", func(t *testing.T) {
+		c.Debug = true
+		_, err := getDB(&c)
+		require.NoError(t, err)
+	})
+
+	t.Run("GetDBFailed", func(t *testing.T) {
+		c.MySQL.DSN = "invalid_dsn"
+		_, err := getDB(&c)
+		require.Error(t, err)
+	})
+}
+
 func TestService_Create(t *testing.T) {
 	turl, err := newService(tests.GlobalConfig)
 	require.NoError(t, err)
@@ -188,21 +207,41 @@ func Test_queryService_GetByLong(t *testing.T) {
 	})
 }
 
-func Test_getDB(t *testing.T) {
-	c := *tests.GlobalConfig
-	t.Run("GetDBSuccess", func(t *testing.T) {
-		_, err := getDB(&c)
-		require.NoError(t, err)
-	})
-	t.Run("GetDBDebug", func(t *testing.T) {
-		c.Debug = true
-		_, err := getDB(&c)
-		require.NoError(t, err)
+func Test_commandService_Delete(t *testing.T) {
+	mockCache, mockStorage := mocks.NewMockCache(t), mocks.NewMockStorage(t)
+
+	s := &commandService{
+		ttl:   time.Second,
+		db:    mockStorage,
+		cache: mockCache,
+	}
+
+	testErr := errors.New("test error")
+
+	t.Run("DeleteSuccess", func(t *testing.T) {
+		mockStorage.EXPECT().Delete(mock.Anything, uint64(38068692543)).Return(nil).Times(1)
+		mockCache.EXPECT().Del(mock.Anything, "zzzzzz").Return(nil).Times(1)
+
+		require.NoError(t, s.Delete(context.Background(), []byte("zzzzzz")))
 	})
 
-	t.Run("GetDBFailed", func(t *testing.T) {
-		c.MySQL.DSN = "invalid_dsn"
-		_, err := getDB(&c)
-		require.Error(t, err)
+	t.Run("DeleteFailedToDecodeShortURL", func(t *testing.T) {
+		err := s.Delete(context.Background(), []byte("invalid_short_url"))
+		require.ErrorIs(t, err, mapping.ErrInvalidInput)
+	})
+
+	t.Run("DeleteFailedToDeleteFromStorage", func(t *testing.T) {
+		mockStorage.EXPECT().Delete(mock.Anything, uint64(38068692543)).Return(testErr).Times(1)
+
+		err := s.Delete(context.Background(), []byte("zzzzzz"))
+		require.ErrorIs(t, err, testErr)
+	})
+
+	t.Run("DeleteFailedToDeleteFromCache", func(t *testing.T) {
+		mockStorage.EXPECT().Delete(mock.Anything, uint64(38068692543)).Return(nil).Times(1)
+		mockCache.EXPECT().Del(mock.Anything, "zzzzzz").Return(testErr).Times(1)
+
+		err := s.Delete(context.Background(), []byte("zzzzzz"))
+		require.ErrorIs(t, err, testErr)
 	})
 }

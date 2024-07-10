@@ -25,6 +25,7 @@ type Service interface {
 	Create(ctx context.Context, long []byte) (*model.TinyURL, error)
 	GetByLong(ctx context.Context, long []byte) (*model.TinyURL, error)
 	Retrieve(ctx context.Context, short []byte) ([]byte, error)
+	Delete(ctx context.Context, short []byte) error
 	Close() error
 }
 
@@ -171,6 +172,20 @@ func (c *commandService) Create(ctx context.Context, long []byte) (*model.TinyUR
 	}, nil
 }
 
+func (c *commandService) Delete(ctx context.Context, short []byte) error {
+	// decode and validate short URI
+	seq, err := mapping.Base58Decode(short)
+	if err != nil {
+		return err
+	}
+
+	if err = c.db.Delete(ctx, seq); err != nil {
+		return err
+	}
+
+	return c.cache.Del(ctx, string(short))
+}
+
 // Close closes the command service.
 func (c *commandService) Close() error {
 	c.seq.Close()
@@ -191,12 +206,10 @@ type queryService struct {
 
 // Retrieve a tiny URL.
 func (q *queryService) Retrieve(ctx context.Context, short []byte) ([]byte, error) {
-	// validate short URL
+	// decode and validate short URI
 	seq, err := mapping.Base58Decode(short)
 	if err != nil {
-		if errors.Is(err, mapping.ErrInvalidInput) {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	// try to get from cache
