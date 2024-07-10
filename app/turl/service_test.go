@@ -2,6 +2,7 @@ package turl
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"testing"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
+	"github.com/beihai0xff/turl/configs"
 	"github.com/beihai0xff/turl/internal/tests"
 	"github.com/beihai0xff/turl/internal/tests/mocks"
 	"github.com/beihai0xff/turl/pkg/cache"
@@ -19,7 +21,10 @@ import (
 )
 
 func Test_getDB(t *testing.T) {
-	c := *tests.GlobalConfig
+	data, _ := json.Marshal(tests.GlobalConfig)
+	var c configs.ServerConfig
+	require.NoError(t, json.Unmarshal(data, &c))
+
 	t.Run("GetDBSuccess", func(t *testing.T) {
 		_, err := getDB(&c)
 		require.NoError(t, err)
