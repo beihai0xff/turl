@@ -31,7 +31,7 @@ gen/struct_tag:
 gen/swagger:
 	swag init --parseDependency --parseDepth 1 -d app/turl -g http.go -o docs/swagger
 
-test: bootstrap gen/mock
+test: bootstrap gen/mock gen/swagger
 	docker compose -f ./internal/tests/docker-compose.yaml up -d --wait
 	go test -gcflags="all=-l" -race -coverprofile=coverage.out -v ./...
 	docker compose -f ./internal/tests/docker-compose.yaml down
