@@ -10,12 +10,12 @@ import (
 
 func TestShortenRequest(t *testing.T) {
 	t.Run("ValidURL", func(t *testing.T) {
-		req := model.ShortenRequest{LongURL: "https://www.example.com"}
+		req := model.CreateRequest{LongURL: "https://www.example.com"}
 		require.NotNil(t, req)
 	})
 
 	t.Run("InvalidURL", func(t *testing.T) {
-		req := model.ShortenRequest{LongURL: "invalid_url"}
+		req := model.CreateRequest{LongURL: "invalid_url"}
 		require.NotNil(t, req)
 	})
 }

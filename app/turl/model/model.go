@@ -7,10 +7,16 @@ import (
 	"gorm.io/gorm"
 )
 
-// ShortenRequest is the request of shorten API
-type ShortenRequest struct {
+// CreateRequest is the request of create API
+type CreateRequest struct {
 	// LongURL is the original long URL
 	LongURL string `binding:"required,http_url" json:"long_url" form:"long_url" xml:"long_url"`
+}
+
+// ShortenRequest is the request of shorten API with short URL
+type ShortenRequest struct {
+	// ShortURL is the shortened URL
+	ShortURL string `binding:"required" json:"short_url" form:"short_url" xml:"short_url"`
 }
 
 // ShortenResponse is the response of shorten API

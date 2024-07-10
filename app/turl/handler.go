@@ -34,7 +34,7 @@ func NewHandler(c *configs.ServerConfig) (*Handler, error) {
 
 // Create creates a new short URL from the long URL.
 func (h *Handler) Create(c *gin.Context) {
-	var req model.ShortenRequest
+	var req model.CreateRequest
 
 	if err := c.ShouldBind(&req); err != nil {
 		c.JSON(http.StatusBadRequest, &model.ShortenResponse{TinyURL: model.TinyURL{LongURL: req.LongURL}, Error: err.Error()})
@@ -74,6 +74,8 @@ func (h *Handler) Redirect(c *gin.Context) {
 		}
 
 		c.JSON(http.StatusInternalServerError, &model.ShortenResponse{TinyURL: t, Error: err.Error()})
+
+		return
 	}
 
 	c.Redirect(http.StatusFound, string(long))
@@ -81,7 +83,7 @@ func (h *Handler) Redirect(c *gin.Context) {
 
 // GetShortenInfo returns the original long URL of the short URL.
 func (h *Handler) GetShortenInfo(c *gin.Context) {
-	var req model.ShortenRequest
+	var req model.CreateRequest
 
 	if err := c.ShouldBind(&req); err != nil {
 		c.JSON(http.StatusBadRequest, &model.ShortenResponse{TinyURL: model.TinyURL{LongURL: req.LongURL}, Error: err.Error()})
@@ -97,6 +99,37 @@ func (h *Handler) GetShortenInfo(c *gin.Context) {
 	record.ShortURL = fmt.Sprintf("%s/%s", h.domain, record.ShortURL)
 
 	c.JSON(http.StatusOK, &model.ShortenResponse{TinyURL: *record})
+}
+
+// Delete deletes the short URL.
+func (h *Handler) Delete(c *gin.Context) {
+	var req model.ShortenRequest
+
+	if err := c.ShouldBind(&req); err != nil {
+		c.JSON(http.StatusBadRequest, &model.ShortenResponse{TinyURL: model.TinyURL{ShortURL: req.ShortURL}, Error: err.Error()})
+		return
+	}
+
+	t := model.TinyURL{ShortURL: req.ShortURL}
+
+	err := h.s.Delete(c, []byte(req.ShortURL))
+	if err != nil {
+		if errors.Is(err, mapping.ErrInvalidInput) {
+			c.JSON(http.StatusBadRequest, &model.ShortenResponse{TinyURL: t, Error: "invalid short URL"})
+			return
+		}
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, &model.ShortenResponse{TinyURL: t, Error: "short URL not found"})
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, &model.ShortenResponse{TinyURL: t, Error: err.Error()})
+
+		return
+	}
+
+	c.JSON(http.StatusOK, &model.ShortenResponse{TinyURL: t})
 }
 
 // Close closes the handler.
