@@ -17,6 +17,8 @@ endif
 bootstrap:
 	go mod download -x
 	go generate -tags tools tools/tools.go
+	make gen/mock
+	make gen/swagger
 
 lint: gen/swagger
 	swag fmt -d app/turl
@@ -31,7 +33,7 @@ gen/struct_tag:
 gen/swagger:
 	swag init --parseDependency --parseDepth 1 -d app/turl -g http.go -o docs/swagger
 
-test: bootstrap gen/mock gen/swagger
+test: bootstrap
 	docker compose -f ./internal/tests/docker-compose.yaml up -d --wait
 	go test -gcflags="all=-l" -race -coverprofile=coverage.out -v ./...
 	docker compose -f ./internal/tests/docker-compose.yaml down
@@ -45,7 +47,7 @@ test: bootstrap gen/mock gen/swagger
 build: build/docker
 
 # build binary file
-build/binary: clean bootstrap gen/swagger
+build/binary: clean bootstrap
 	go build -tags=jsoniter -ldflags=$(ldflags) -o ./build/dist/binary/turl cmd/turl/main.go
 
 # docker: enable containerd for pulling and storing images
