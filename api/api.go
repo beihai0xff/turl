@@ -9,6 +9,7 @@ const (
 	// DefaultPort default http server port
 	DefaultPort = 8080
 
+	// DefaultAPIPrefix default api prefix
 	DefaultAPIPrefix = "/management"
 
 	// VersionV1 api version
