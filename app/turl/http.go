@@ -12,6 +12,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"golang.org/x/time/rate"
 
+	"github.com/beihai0xff/turl/api"
 	"github.com/beihai0xff/turl/configs"
 	"github.com/beihai0xff/turl/docs/swagger"
 	"github.com/beihai0xff/turl/pkg/db/redis"
@@ -47,16 +48,17 @@ func NewServer(h *Handler, c *configs.ServerConfig) (*http.Server, error) {
 		workqueue.NewBucketRateLimiter[any](rate.NewLimiter(rate.Limit(c.StandAloneReadRate), c.StandAloneReadBurst))))
 
 	if !c.Readonly {
-		swagger.SwaggerInfo.BasePath = "/api"
+		prefix := fmt.Sprintf("%s%s", api.VersionV1, api.DefaultAPIPrefix)
+		swagger.SwaggerInfo.BasePath = prefix
 
 		rdb := redis.Client(c.Cache.Redis)
-		api := router.Group("/api").Use(middleware.RateLimiter(
+		management := router.Group(prefix).Use(middleware.RateLimiter(
 			workqueue.NewItemRedisTokenRateLimiter[any](rdb, c.GlobalRateLimitKey, c.GlobalWriteRate, c.GlobalWriteBurst, time.Second)))
-		api.POST("/shorten", h.Create)
-		api.GET("/shorten", h.GetShortenInfo)
-		api.DELETE("/shorten", h.Delete)
+		management.POST("/shorten", h.Create)
+		management.GET("/shorten", h.GetShortenInfo)
+		management.DELETE("/shorten", h.Delete)
 
-		api.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+		management.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	}
 
 	return &http.Server{
